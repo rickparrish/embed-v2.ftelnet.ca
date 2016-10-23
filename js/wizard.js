@@ -100,7 +100,7 @@ function Update() {
     Snippet += '    Options' + ClientId + '.ScreenColumns = ' + $('#txtScreenColumns').val() + ';\r\n';
     Snippet += '    Options' + ClientId + '.ScreenRows = ' + $('#txtScreenRows').val() + ';\r\n';
     // TODOX SplashScreen
-    if ($('#cboVirtualKeyboardVisible').value !== 'auto') {
+    if ($('#cboVirtualKeyboardVisible').val() !== 'auto') {
         Snippet += '    Options' + ClientId + '.VirtualKeyboardVisible = ' + $('#cboVirtualKeyboardVisible').val() + ';\r\n';
     }
     Snippet += '    var fTelnet' + ClientId + ' = new fTelnetClient(\'fTelnetContainer' + ClientId + '\', Options' + ClientId + ');\r\n';
