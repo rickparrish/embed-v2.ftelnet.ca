@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>fTelnet Embed Wizard</title>
+
+    <link href="/css/bootstrap.min.css?v=2015-12-18" rel="stylesheet" />
+    <link href="/css/site.css?v=2015-12-18" rel="stylesheet" />
+</head>
+<body>
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">fTelnet Embed Wizard <span class="label label-warning">v2</span></a>
+            </div>
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href="https://www.ftelnet.ca" target="_blank">fTelnet Homepage</a></li>
+                    <li><a href="http://proxy.ftelnet.ca" target="_blank">fTelnet Proxies</a></li>
+                    <li><a href="http://my.ftelnet.ca" target="_blank">My fTelnet <span class="hidden-sm">(browser telnet client)</span></a></li>
+                </ul>
+            </div><!--/.nav-collapse -->
+        </div>
+    </div>
+
+    <!-- Begin page content -->
+    <div class="container">
+
+        <div class="well" id="divEmbed">
+            <h4 class="text-success">Want to embed fTelnet on your own website?  Just fill in the boxes below, and at the bottom of the page you'll be given an HTML snippet to copy/paste onto your website.</h4>
+            <p class="text-warning">Pro tip: Most people only need to enter their Hostname, Port, and Proxy settings.  Everything else is just customization, which you're free to do, but don't feel like you need to read and understand every single option.  And if anything isn't clear, click the <span class="glyphicon glyphicon-info-sign text-primary"></span> icons, and if that doesn't help, use the <a href="https://www.ftelnet.ca/contact" target="_blank">contact form</a>.</p>
+            <p class="text-danger">Troubleshooting tip: The most common problems can be solved by changing the <strong>Convert 'bare' LF to CR+LF?</strong>, <strong>What should Enter do?</strong>, and <strong>Echo keypresses locally?</strong> settings (click their <span class="glyphicon glyphicon-info-sign text-primary"></span> icons to see if they might help solve your problem).</p>
+
+            <h2>Server Settings</h2>
+            
+            <div class="row">
+                <div class="col-xs-6">
+                    <label class="control-label" for="txtHostname">What's your <span id="lblPortType1" class="text-warning">telnet</span> server's Hostname?</label>
+                    &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="right" title="What's your server's Hostname?" data-content="The hostname or IP address of your Telnet (or RLogin) server"><span class="glyphicon glyphicon-info-sign"></span></a>
+                    <input type="text" class="form-control" id="txtHostname">
+                </div>
+
+                <div class="col-xs-6">
+                    <label class="control-label" for="txtPort">What's your <span id="lblPortType2" class="text-warning">telnet</span> server's Port?</label>
+                    &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="left" title="Port" data-content="If you run your own proxy, enter the proxy server's port (usually 80 or 1123).  If you're using one of my public proxies (which you'll select below), enter your telnet server port (usually 23).  NOTE: My public proxies have a restricted list of ports they work with.  Contact me (via the fTelnet Homepage link above) if you use a non-standard port and I'll whitelist it for you."><span class="glyphicon glyphicon-info-sign"></span></a>
+                    <input type="text" class="form-control" id="txtPort" value="23">
+                </div>
+
+                <div class="clearfix"></div>
+
+                <div class="col-xs-6">
+                    <label class="control-label" for="cboProxyServer">What proxy is closest to you?</label>
+                    &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="right" title="What proxy is closest to you?" data-content="If you run fTelnetProxy, websockify, or Synchronet's websocketservice.js, then select the 'I run my own proxy server' option, otherwise pick the public proxy closest to your server."><span class="glyphicon glyphicon-info-sign"></span></a>
+                    <select class="form-control" id="cboProxyServer">
+                        <optgroup label="Don't connect through a public proxy">
+                            <option value="none" selected="selected">I run my own proxy server</option>
+                        </optgroup>
+                        <optgroup label="Australia">
+                            <option value="au:8410:8411">Australia (Sydney): proxy-au.ftelnet.ca</option>
+                        </optgroup>
+                        <optgroup label="Europe">
+                            <option value="nl:80:443">Netherlands (Alblasserdam): proxy-nl.ftelnet.ca</option>
+                        </optgroup>
+                        <optgroup label="North America">
+                            <option value="us-ca:80:443">United States (California): proxy-us-ca.ftelnet.ca</option>
+                            <option value="us-ga:80:443" selected="selected">United States (Georgia): proxy-us-ga.ftelnet.ca</option>
+                            <option value="us-nj:80:443">United States (New Jersey): proxy-us-nj.ftelnet.ca</option>
+                        </optgroup>
+                    </select>
+                </div>
+                
+                <div class="col-xs-6">
+                    <label class="control-label" for="cboAutoConnect">Auto Connect?</label>
+                    &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="left" title="Auto Connect?" data-content="Automatically connect to your server after fTelnet initializes?"><span class="glyphicon glyphicon-info-sign"></span></a>
+                    <select class="form-control" id="cboAutoConnect">
+                        <option value="true">Yes, automatically connect on page load</option>
+                        <option value="false" selected="selected">No, show my splash screen and wait for users to hit Connect</option>
+                    </select>
+                </div>
+
+                <div class="clearfix"></div>
+
+                <div class="col-xs-6">
+                    <label class="control-label" for="cboFileTransfer">Allow YMODEM-g File Transfers?</label>
+                    &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="right" title="Allow YMODEM-g File Transfers?" data-content="Does your server support YMODEM-g file transfers?  If not you can disable file transfer support (hides menu items, uses a slightly smaller fTelnet.js file)"><span class="glyphicon glyphicon-info-sign"></span></a>
+                    <select class="form-control" id="cboFileTransfer">
+                        <option value="true">Yes, my users might download stuff from my server</option>
+                        <option value="false">No, my server doesn't have anything to download</option>
+                    </select>
+                </div>
+            </div>
+               
+            <h2>Connection Settings</h2>
+
+            <div class="row">
+                <div class="col-xs-6">
+                    <label class="control-label" for="cboConnectionType">What type of server are you running?</label>
+                    &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="right" title="What type of server are you running?" data-content="Does your server speak Telnet or RLogin?  (If RLogin, check for additional settings below)"><span class="glyphicon glyphicon-info-sign"></span></a>
+                    <select class="form-control" id="cboConnectionType">
+                        <option value="telnet">I'm running a Telnet server</option>
+                        <option value="rlogin">I'm running an RLogin server</option>
+                    </select>
+                </div>
+
+                <div class="col-xs-6">
+                    <label class="control-label" for="cboBitsPerSecond">What bit rate do you want to emulate?</label>
+                    &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="left" title="What bit rate do you want to emulate?" data-content="Lets you emulate a given connection speed.  I don't recommend you use a value higher than 57,600 as it causes problems with painting (ie entire screens get drawn at once after a small but noticeable delay, rather than a couple lines at a time)"><span class="glyphicon glyphicon-info-sign"></span></a>
+                    <select class="form-control" id="cboBitsPerSecond">
+                        <option value="300">300 bits per second</option>
+                        <option value="1200">1200 bits per second</option>
+                        <option value="2400">2400 bits per second</option>
+                        <option value="4800">4800 bits per second</option>
+                        <option value="9600">9600 bits per second</option>
+                        <option value="14400">14,400 bits per second</option>
+                        <option value="19200">19,200 bits per second</option>
+                        <option value="28800">28,800 bits per second</option>
+                        <option value="33600">33,600 bits per second</option>
+                        <option value="38400">38,400 bits per second</option>
+                        <option value="57600" selected="selected">57,600 bits per second</option>
+                        <option value="115200">115,200 bits per second</option>
+                    </select>
+                </div>
+                
+                <div class="clearfix"></div>
+                
+                <div class="col-xs-6">
+                    <label class="control-label" for="cboBareLFtoCRLF">Convert 'bare' LF to CR+LF?</label>
+                    &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="right" title="Convert 'bare' LF to CRLF?" data-content="Is your screen output garbled (line to starts at the X position where line 1 ended)?  It's possible your server is only sending LF (Line Feed) instead of CR+LF (Carriage Return + Line Feed).  Enabling this option will treat 'bare' LFs as CR+LF, which will solve that problem."><span class="glyphicon glyphicon-info-sign"></span></a>
+                    <select class="form-control" id="cboBareLFtoCRLF">
+                        <option value="true">Yes, convert any bare LFs to CR+LF</option>
+                        <option value="false" selected="selected">No, leave my bare LFs alone!</option>
+                    </select>
+                </div>
+
+                <div class="col-xs-6">
+                    <label class="control-label" for="cboForceWss">Force 'wss' connections?</label>
+                    &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="left" title="Force 'wss' connections?" data-content="Too tricky to try to explain in a popover...basically if you know what this option means, you'll know whether you need/want it enabled.  If you don't know what it means, leave it disabled."><span class="glyphicon glyphicon-info-sign"></span></a>
+                    <select class="form-control" id="cboForceWss">
+                        <option value="true">Yes, always connect using wss and never use ws</option>
+                        <option value="false" selected="selected">No, only use wss for https connections</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="pnlRLogin" class="hidden">
+                <h2>RLogin Settings</h2>
+
+                <div class="row">
+                    <div class="col-xs-6">
+                        <label class="control-label" for="txtRLoginClientUsername">Client Username</label>
+                        &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="right" title="Connection Type" data-content="The string to send in the Client Username spot in the RLogin handshake"><span class="glyphicon glyphicon-info-sign"></span></a>
+                        <input type="text" class="form-control" id="txtRLoginClientUsername">
+                    </div>
+
+                    <div class="col-xs-6">
+                        <label class="control-label" for="txtRLoginServerUsername">Server Username</label>
+                        &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="right" title="Connection Type" data-content="The string to send in the Server Username spot in the RLogin handshake"><span class="glyphicon glyphicon-info-sign"></span></a>
+                        <input type="text" class="form-control" id="txtRLoginServerUsername">
+                    </div>
+
+                    <div class="clearfix"></div>
+                    
+                    <div class="col-xs-6">
+                        <label class="control-label" for="txtRLoginTerminalType">Terminal Type</label>
+                        &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="right" title="Connection Type" data-content="The string to send in the Terminal Type spot in the RLogin handshake"><span class="glyphicon glyphicon-info-sign"></span></a>
+                        <input type="text" class="form-control" id="txtRLoginTerminalType">
+                    </div>
+                </div>
+            </div>
+            
+            <h2>Display Settings</h2>
+
+            <div class="row">
+                <div class="col-xs-6">
+                    <label class="control-label" for="cboEmulation">What Emulation should fTelnet use?</label>
+                    &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="right" title="Emulation" data-content="Most likely you want ansi-bbs, but if you run a C64 or RIP capable BBS then choose one of the other options."><span class="glyphicon glyphicon-info-sign"></span></a>
+                    <select class="form-control" id="cboEmulation">
+                        <option value="ansi-bbs" selected="selected">ansi-bbs</option>
+                        <option value="C64">Commodore 64</option>
+                        <option value="RIP">RIP (still very experimental, only meant for testing)</option>
+                    </select>
+                </div>
+            
+                <div id="pnlSplashScreen">
+                    <div class="col-xs-6">
+                        <label class="control-label" for="txtSplashScreen">Want to display a custom ANSI splash screen?</label>
+                        &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="left" title="Want to display a custom ANSI splash screen?" data-content="TODO At some point I plan on having the option to upload an ANSI file to use as the splash screen"><span class="glyphicon glyphicon-info-sign"></span></a>
+                        <input type="text" class="form-control" id="txtSplashScreen" placeholder="TODO Add a file upload control">
+                    </div>
+                </div>
+                    
+                <div class="clearfix"></div>
+
+                <div id="pnlAnsiBBS">
+                    <div class="col-xs-6">
+                        <label class="control-label" for="txtScreenColumns">How many columns wide should the client be?</label>
+                        &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="right" title="How many columns wide should the client be?" data-content="The number of columns for the screen"><span class="glyphicon glyphicon-info-sign"></span></a>
+                        <input type="text" class="form-control" id="txtScreenColumns" value="80">
+                    </div>
+
+                    <div class="col-xs-6">
+                        <label class="control-label" for="txtScreenRows">How many rows high should the client be?</label>
+                        &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="left" title="How many rows high should the client be?" data-content="The number of rows for the screen"><span class="glyphicon glyphicon-info-sign"></span></a>
+                        <input type="text" class="form-control" id="txtScreenRows" value="25">
+                    </div>
+
+                    <div class="clearfix"></div>
+                    
+                    <div class="col-xs-6">
+                        <label class="control-label" for="cboFont">What codepage should fTelnet use?</label>
+                        &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="right" title="What codepage should fTelnet use?" data-content="The Font Codepage to use for displaying high ASCII characters"><span class="glyphicon glyphicon-info-sign"></span></a>
+                        <select class="form-control" id="cboFont">
+                            <option value="CP437">Codepage 437</option>
+                            <option value="CP737">Codepage 737</option>
+                            <option value="CP775">Codepage 775</option>
+                            <option value="CP850">Codepage 850</option>
+                            <option value="CP852">Codepage 852</option>
+                            <option value="CP857">Codepage 857</option>
+                            <option value="CP860">Codepage 860</option>
+                            <option value="CP861">Codepage 861</option>
+                            <option value="CP862">Codepage 862</option>
+                            <option value="CP863">Codepage 863</option>
+                            <option value="CP865">Codepage 865</option>
+                            <option value="CP866">Codepage 866</option>
+                            <option value="CP869">Codepage 869</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <h2>Keyboard Settings</h2>
+            
+            <div class="row">
+                <div class="col-xs-6">
+                    <label class="control-label" for="cboEnter">What should Enter do?</label>
+                    &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="right" title="What should Enter do?" data-content="Is your Enter key not working?  Your server may expect the telnet-standard Carriage Return + Line Feed option.  Some BBS software choke on the Line Feed, which is why the Carriage Return only option is the default."><span class="glyphicon glyphicon-info-sign"></span></a>
+                    <select class="form-control" id="cboEnter">
+                        <option value="\r">Just send a Carriage Return</option>
+                        <option value="\r\n">Send a Carriage Return + Line Feed</option>
+                    </select>
+                </div>
+
+                <div class="col-xs-6">
+                    <label class="control-label" for="cboLocalEcho">Echo keypresses locally?</label>
+                    &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="left" title="Echo keypresses locally?" data-content="Seeing two of everything when you type?  Turn local echo off.  Seeing nothing when you type?  Turn local echo on."><span class="glyphicon glyphicon-info-sign"></span></a>
+                    <select class="form-control" id="cboLocalEcho">
+                        <option value="true">Yes, I can't see what I'm typing without it!</option>
+                        <option value="false" selected="selected">No, my server echos my input for me</option>
+                    </select>
+                </div>
+
+                <div class="clearfix"></div>
+
+                <div class="col-xs-6">
+                    <label class="control-label" for="cboVirtualKeyboardVisible">Show the Virtual Keyboard by default?</label>
+                    &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="right" title="Show the Virtual Keyboard by default?" data-content="fTelnet has a virtual keyboard for mobile users.  You can show it by default, hide it by default, or auto-detect whether to show it (fTelnet will try to show it for mobile users but not non-mobile users).  No matter what you select, it can be toggled by the user via the menu."><span class="glyphicon glyphicon-info-sign"></span></a>
+                    <select class="form-control" id="cboVirtualKeyboardVisible">
+                        <option value="auto">Auto-detect (visible for mobile, hidden for non-mobile)</option>
+                        <option value="true">Yes, show it to everyone by default</option>
+                        <option value="false">No, hide it from everyone by default</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="pnlSnippet" class="hidden">
+                <hr />
+                
+                <h2>Here's your customized embed code</h2>
+                <h4 class="text-success">Just copy/paste the snippet into the position where you would like fTelnet to appear on your webpage</h4>
+                <input type="checkbox" id="chkUniqueIds"> <label for="chkUniqueIds"><span class="text-warning">Enable unique ids (tick this if you want 2+ fTelnet clients on the same page)</span></label><br />
+                <textarea id="txtSnippet" class="form-control" rows="30"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div id="footer">
+        <div class="container">
+            <p class="text-muted">Copyright &copy; <script>document.write(new Date().getFullYear());</script>, <a href="http://www.rickparrish.ca" target="_blank">Rick Parrish</a> of <a href="http://www.randm.ca" target="_blank">R&amp;M Software</a></p>
+        </div>
+    </div>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="/js/jquery-1.11.0.min.js"><\/script>')</script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+    <script>$.fn.modal || document.write('<script src="/js/bootstrap.min.js"><\/script>')</script>
+
+    <script src="/js/wizard.js?v=2015-12-18"></script>
+
+    <script>
+      $(function () {
+        $('[data-toggle="popover"]').popover();
+      })
+    </script>
+
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-4602017-10', 'auto');
+      ga('send', 'pageview');
+    </script>
+</body>
+</html>

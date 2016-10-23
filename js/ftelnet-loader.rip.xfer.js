@@ -1,0 +1,1 @@
+document.write('<script src="//embed-v2.ftelnet.ca/ftelnet/ftelnet.rip.xfer.min.js?v=2015-12-18" id="fTelnetScript"><\/script>');
