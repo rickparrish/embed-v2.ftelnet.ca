@@ -71,7 +71,7 @@ function Update() {
     var XFER = $('#cboFileTransfer').val() === 'true' ? 'xfer' : 'noxfer';
     
     // Build the snippet
-    var Snippet = '<div id="fTelnetContainer' + ClientId + '"></div>\r\n';
+    var Snippet = '<div id="fTelnetContainer' + ClientId + '" class="fTelnetContainer"></div>\r\n';
     // TODOX norip.noxfer stuff
     Snippet += '<script>document.write(\'<script src="//embed-v2.ftelnet.ca/js/ftelnet-loader.' + RIP + '.' + XFER + '.js?v=\' + (new Date()).getTime() + \'"><\\/script>\');</script>\r\n';
     Snippet += '<script>\r\n';
