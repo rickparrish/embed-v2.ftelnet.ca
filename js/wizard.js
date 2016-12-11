@@ -63,7 +63,7 @@ function Update() {
     // Get a unique client id, if necessary
     var ClientId = '';
     if ($('#chkUniqueIds').is(':checked')) {
-        ClientId = '_' + $('#txtHostname').val().replace(/[.]/g, '-') + '_' + $('#txtPort').val();
+        ClientId = '_' + $('#txtHostname').val().replace(/[.-]/g, '_') + '_' + $('#txtPort').val();
     }
     
     // Check RIP and XFER support
