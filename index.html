@@ -280,8 +280,30 @@
                 <h2>Here's your customized embed code</h2>
                 <h4 class="text-success">Just copy/paste the snippet into the position where you would like fTelnet to appear on your webpage</h4>
                 <input type="checkbox" id="chkUniqueIds"> <label for="chkUniqueIds"><span class="text-warning">Enable unique ids (tick this if you want 2+ fTelnet clients on the same page)</span></label><br />
-                <textarea id="txtSnippet" class="form-control" rows="30"></textarea>
+                <textarea id="txtSnippet" class="form-control" rows="30"></textarea><br />
+                <!-- Button trigger modal -->
+                <button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#dlgPreview">
+                  Preview My Settings
+                </button>
             </div>
+            
+            <!-- Preview Modal -->
+            <div class="modal fade" id="dlgPreview" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+              <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="lblPreviewTitle">Preview My Settings</h4>
+                  </div>
+                  <div class="modal-body" id="pnlPreviewBody">
+                    <h4 class="text-success">Loading preview...</h4>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                  </div>
+                </div>
+              </div>
+            </div>            
         </div>
     </div>
 
@@ -297,11 +319,17 @@
     <script>$.fn.modal || document.write('<script src="js/bootstrap.min.js"><\/script>')</script>
 
     <script src="js/wizard.js?v=2018-03-07"></script>
+    <script src="//embed-v2.ftelnet.ca/ftelnet/ftelnet.rip.xfer.min.js?v=2018-03-07" id="fTelnetScript"></script>
 
     <script>
       $(function () {
         $('[data-toggle="popover"]').popover();
-      })
+        
+        $('#dlgPreview').on('shown.bs.modal', function (event) {
+            $(this).find('.modal-body').html(SnippetDiv);
+            eval(SnippetScriptOptions);
+        });
+      });
     </script>
 
     <script>

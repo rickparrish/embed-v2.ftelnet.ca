@@ -1,3 +1,7 @@
+var SnippetDiv = '';
+var SnippetScriptfTelnet = '';
+var SnippetScriptOptions = '';
+
 $(document).ready(function () {
     // Update, just in case they refreshed while on the wizard page
     Update();
@@ -71,45 +75,43 @@ function Update() {
     var XFER = $('#cboFileTransfer').val() === 'true' ? 'xfer' : 'noxfer';
     
     // Build the snippet
-    var Snippet = '<div id="fTelnetContainer' + ClientId + '" class="fTelnetContainer"></div>\r\n';
-    // TODOX norip.noxfer stuff
-    Snippet += '<script>document.write(\'<script src="//embed-v2.ftelnet.ca/js/ftelnet-loader.' + RIP + '.' + XFER + '.js?v=\' + (new Date()).getTime() + \'"><\\/script>\');</script>\r\n';
-    Snippet += '<script>\r\n';
-    Snippet += '    var Options' + ClientId + ' = new fTelnetOptions();\r\n';
-    Snippet += '    Options' + ClientId + '.BareLFtoCRLF = ' + $('#cboBareLFtoCRLF').val() + ';\r\n';
-    Snippet += '    Options' + ClientId + '.BitsPerSecond = ' + $('#cboBitsPerSecond').val() + ';\r\n';
-    Snippet += '    Options' + ClientId + '.ConnectionType = \'' + $('#cboConnectionType').val() + '\';\r\n';
-    Snippet += '    Options' + ClientId + '.Emulation = \'' + $('#cboEmulation').val() + '\';\r\n';
-    Snippet += '    Options' + ClientId + '.Enter = \'' + $('#cboEnter').val() + '\';\r\n';
-    Snippet += '    Options' + ClientId + '.Font = \'' + $('#cboFont').val() + '\';\r\n';
-    Snippet += '    Options' + ClientId + '.ForceWss = ' + $('#cboForceWss').val() + ';\r\n';
-    Snippet += '    Options' + ClientId + '.Hostname = \'' + $('#txtHostname').val() + '\';\r\n';
-    Snippet += '    Options' + ClientId + '.LocalEcho = ' + $('#cboLocalEcho').val() + ';\r\n';
-    Snippet += '    Options' + ClientId + '.Port = ' + $('#txtPort').val() + ';\r\n';
+    SnippetDiv = '<div id="fTelnetContainer' + ClientId + '" class="fTelnetContainer"></div>\r\n';
+    SnippetScriptfTelnet = '<script>document.write(\'<script src="//embed-v2.ftelnet.ca/js/ftelnet-loader.' + RIP + '.' + XFER + '.js?v=\' + (new Date()).getTime() + \'"><\\/script>\');</script>\r\n';
+    SnippetScriptOptions = '    var Options' + ClientId + ' = new fTelnetOptions();\r\n';
+    SnippetScriptOptions += '    Options' + ClientId + '.BareLFtoCRLF = ' + $('#cboBareLFtoCRLF').val() + ';\r\n';
+    SnippetScriptOptions += '    Options' + ClientId + '.BitsPerSecond = ' + $('#cboBitsPerSecond').val() + ';\r\n';
+    SnippetScriptOptions += '    Options' + ClientId + '.ConnectionType = \'' + $('#cboConnectionType').val() + '\';\r\n';
+    SnippetScriptOptions += '    Options' + ClientId + '.Emulation = \'' + $('#cboEmulation').val() + '\';\r\n';
+    SnippetScriptOptions += '    Options' + ClientId + '.Enter = \'' + $('#cboEnter').val() + '\';\r\n';
+    SnippetScriptOptions += '    Options' + ClientId + '.Font = \'' + $('#cboFont').val() + '\';\r\n';
+    SnippetScriptOptions += '    Options' + ClientId + '.ForceWss = ' + $('#cboForceWss').val() + ';\r\n';
+    SnippetScriptOptions += '    Options' + ClientId + '.Hostname = \'' + $('#txtHostname').val() + '\';\r\n';
+    SnippetScriptOptions += '    Options' + ClientId + '.LocalEcho = ' + $('#cboLocalEcho').val() + ';\r\n';
+    SnippetScriptOptions += '    Options' + ClientId + '.Port = ' + $('#txtPort').val() + ';\r\n';
     if ($('#cboProxyServer').val() !== 'none') {
         var HostPorts = $('#cboProxyServer').val().split(':');
-        Snippet += '    Options' + ClientId + '.ProxyHostname = \'proxy-' + HostPorts[0] + '.ftelnet.ca\';\r\n';
-        Snippet += '    Options' + ClientId + '.ProxyPort = ' + HostPorts[1] + ';\r\n';
-        Snippet += '    Options' + ClientId + '.ProxyPort = ' + HostPorts[2] + ';\r\n';
+        SnippetScriptOptions += '    Options' + ClientId + '.ProxyHostname = \'proxy-' + HostPorts[0] + '.ftelnet.ca\';\r\n';
+        SnippetScriptOptions += '    Options' + ClientId + '.ProxyPort = ' + HostPorts[1] + ';\r\n';
+        SnippetScriptOptions += '    Options' + ClientId + '.ProxyPort = ' + HostPorts[2] + ';\r\n';
     }        
     if ($('#cboConnectionType').val() === 'rlogin') {
-        Snippet += '    Options' + ClientId + '.RLoginClientUsername = \'' + $('#txtRLoginClientUsername').val() + '\';\r\n';
-        Snippet += '    Options' + ClientId + '.RLoginServerUsername = \'' + $('#txtRLoginServerUsername').val() + '\';\r\n';
-        Snippet += '    Options' + ClientId + '.RLoginTerminalType = \'' + $('#txtRLoginTerminalType').val() + '\';\r\n';
+        SnippetScriptOptions += '    Options' + ClientId + '.RLoginClientUsername = \'' + $('#txtRLoginClientUsername').val() + '\';\r\n';
+        SnippetScriptOptions += '    Options' + ClientId + '.RLoginServerUsername = \'' + $('#txtRLoginServerUsername').val() + '\';\r\n';
+        SnippetScriptOptions += '    Options' + ClientId + '.RLoginTerminalType = \'' + $('#txtRLoginTerminalType').val() + '\';\r\n';
     }
-    Snippet += '    Options' + ClientId + '.ScreenColumns = ' + $('#txtScreenColumns').val() + ';\r\n';
-    Snippet += '    Options' + ClientId + '.ScreenRows = ' + $('#txtScreenRows').val() + ';\r\n';
+    SnippetScriptOptions += '    Options' + ClientId + '.ScreenColumns = ' + $('#txtScreenColumns').val() + ';\r\n';
+    SnippetScriptOptions += '    Options' + ClientId + '.ScreenRows = ' + $('#txtScreenRows').val() + ';\r\n';
     // TODOX SplashScreen
     if ($('#cboVirtualKeyboardVisible').val() !== 'auto') {
-        Snippet += '    Options' + ClientId + '.VirtualKeyboardVisible = ' + $('#cboVirtualKeyboardVisible').val() + ';\r\n';
+        SnippetScriptOptions += '    Options' + ClientId + '.VirtualKeyboardVisible = ' + $('#cboVirtualKeyboardVisible').val() + ';\r\n';
     }
-    Snippet += '    var fTelnet' + ClientId + ' = new fTelnetClient(\'fTelnetContainer' + ClientId + '\', Options' + ClientId + ');\r\n';
+    SnippetScriptOptions += '    var fTelnet' + ClientId + ' = new fTelnetClient(\'fTelnetContainer' + ClientId + '\', Options' + ClientId + ');\r\n';
     if ($('#cboAutoConnect').val() === 'true') {
-        Snippet += '    fTelnet' + ClientId + '.Connect();\r\n';
+        SnippetScriptOptions += '    fTelnet' + ClientId + '.Connect();\r\n';
     }
-    Snippet += '</script>\r\n';
 
     // Update the page with the snippets
+    var Snippet = SnippetDiv + SnippetScriptfTelnet + '<script>\r\n' + SnippetScriptOptions + '</script>';
     $('#txtSnippet').val(Snippet);
     
     // Update size of snippet textbox
