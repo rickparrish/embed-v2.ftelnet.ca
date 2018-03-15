@@ -1,6 +1,7 @@
 var SnippetDiv = '';
 var SnippetScriptfTelnet = '';
 var SnippetScriptOptions = '';
+var SplashScreen = '';
 
 $(document).ready(function () {
     // Update, just in case they refreshed while on the wizard page
@@ -15,6 +16,27 @@ $(CheckBoxes).click(function () {
 var ComboBoxes = '#cboAutoConnect, #cboBareLFtoCRLF, #cboBitsPerSecond, #cboConnectionType, #cboEmulation, #cboEnter, #cboFileTransfer, #cboFont, #cboForceWss, #cboProxyServer, #cboVirtualKeyboardVisible';
 $(ComboBoxes).change(function () {
     Update();
+});
+
+var FileUpload = '#fuSplashScreen';
+$(FileUpload).change(function () {
+    if (!window.File || !window.FileReader || !window.FileList || !window.Blob) {
+      alert('The File APIs are not fully supported in this browser, so you\'ll have to set the SplashScreen manually.');
+      return;
+    }   
+
+    var fuSplashScreen = document.getElementById('fuSplashScreen');
+    if (!fuSplashScreen.files) {
+      alert('This browser doesn\'t seem to support the `files` property of file inputs, so you\'ll have to set the SplashScreen manually.');
+    } else {
+      var UploadedFile = fuSplashScreen.files[0];
+      var FR = new FileReader();
+      FR.onload = function() {
+          SplashScreen = FR.result.split('base64,')[1];
+          Update();
+      };
+      FR.readAsDataURL(UploadedFile);
+    }    
 });
 
 var TextBoxes = '#txtHostname, #txtPort, #txtRLoginClientUsername, #txtRLoginServerUsername, #txtRLoginTerminalType, #txtScreenColumns, #txtScreenRows';
@@ -101,7 +123,9 @@ function Update() {
     }
     SnippetScriptOptions += '    Options' + ClientId + '.ScreenColumns = ' + $('#txtScreenColumns').val() + ';\r\n';
     SnippetScriptOptions += '    Options' + ClientId + '.ScreenRows = ' + $('#txtScreenRows').val() + ';\r\n';
-    // TODOX SplashScreen
+    if (SplashScreen !== '') {
+        SnippetScriptOptions += '    Options' + ClientId + '.SplashScreen = \'' + SplashScreen + '\';\r\n';
+    }
     if ($('#cboVirtualKeyboardVisible').val() !== 'auto') {
         SnippetScriptOptions += '    Options' + ClientId + '.VirtualKeyboardVisible = ' + $('#cboVirtualKeyboardVisible').val() + ';\r\n';
     }
