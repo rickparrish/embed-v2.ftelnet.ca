@@ -3702,7 +3702,7 @@ var TelnetConnection = (function (_super) {
         var _this = this;
         try {
             var xhr = new XMLHttpRequest();
-            xhr.open('get', 'http://myip.randm.ca', true);
+            xhr.open('get', '//myip.randm.ca', true);
             xhr.onload = function () {
                 var status = xhr.status;
                 if (status === 200) {
@@ -3752,7 +3752,7 @@ var TelnetConnection = (function (_super) {
     TelnetConnection.prototype.HandleTerminalLocationNumber = function () {
         var _this = this;
         var xhr = new XMLHttpRequest();
-        xhr.open('get', 'http://myip.randm.ca', true);
+        xhr.open('get', '//myip.randm.ca', true);
         xhr.onload = function () {
             var status = xhr.status;
             if (status === 200) {
