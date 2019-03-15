@@ -109,6 +109,7 @@ function Update() {
     SnippetScriptOptions += '    Options' + ClientId + '.ForceWss = ' + $('#cboForceWss').val() + ';\r\n';
     SnippetScriptOptions += '    Options' + ClientId + '.Hostname = \'' + $('#txtHostname').val() + '\';\r\n';
     SnippetScriptOptions += '    Options' + ClientId + '.LocalEcho = ' + $('#cboLocalEcho').val() + ';\r\n';
+    SnippetScriptOptions += '    Options' + ClientId + '.NegotiateLocalEcho = ' + ($('#chkNegotiateLocalEcho').is(':checked') ? 'true' : 'false') + ';\r\n';
     SnippetScriptOptions += '    Options' + ClientId + '.Port = ' + $('#txtPort').val() + ';\r\n';
     if ($('#cboProxyServer').val() !== 'none') {
         var HostPorts = $('#cboProxyServer').val().split(':');
