@@ -3821,8 +3821,15 @@ var TelnetConnection = (function (_super) {
         configurable: true
     });
     TelnetConnection.prototype.NegotiateInbound = function (data) {
+        var DebugLine = "";
         while (data.bytesAvailable) {
             var B = data.readUnsignedByte();
+            if (B >= 32 && B <= 126) {
+                DebugLine += String.fromCharCode(B);
+            }
+            else {
+                DebugLine += '~' + B.toString(10);
+            }
             if (this._NegotiationState === TelnetNegotiationState.Data) {
                 if (B === TelnetCommand.IAC) {
                     this._NegotiationState = TelnetNegotiationState.IAC;
@@ -3997,6 +4004,8 @@ var TelnetConnection = (function (_super) {
                 this._NegotiationState = TelnetNegotiationState.Data;
             }
         }
+        if (DebugLine.length > 0) {
+        }
     };
     TelnetConnection.prototype.OnSocketOpen = function () {
         _super.prototype.OnSocketOpen.call(this);
@@ -4018,6 +4027,8 @@ var TelnetConnection = (function (_super) {
             ToSendBytes.push(option);
             this.Send(ToSendBytes);
         }
+        else {
+        }
     };
     TelnetConnection.prototype.SendDont = function (option) {
         if (this._NegotiatedOptions[option] !== TelnetCommand.Dont) {
@@ -4027,6 +4038,8 @@ var TelnetConnection = (function (_super) {
             ToSendBytes.push(TelnetCommand.Dont);
             ToSendBytes.push(option);
             this.Send(ToSendBytes);
+        }
+        else {
         }
     };
     TelnetConnection.prototype.SendSubnegotiate = function (option) {
@@ -4051,6 +4064,8 @@ var TelnetConnection = (function (_super) {
             ToSendBytes.push(option);
             this.Send(ToSendBytes);
         }
+        else {
+        }
     };
     TelnetConnection.prototype.SendWont = function (option) {
         if (this._NegotiatedOptions[option] !== TelnetCommand.Wont) {
@@ -4060,6 +4075,8 @@ var TelnetConnection = (function (_super) {
             ToSendBytes.push(TelnetCommand.Wont);
             ToSendBytes.push(option);
             this.Send(ToSendBytes);
+        }
+        else {
         }
     };
     return TelnetConnection;
@@ -7476,6 +7493,7 @@ var fTelnetOptions = (function () {
         this.ForceWss = false;
         this.Hostname = 'bbs.ftelnet.ca';
         this.LocalEcho = false;
+        this.NegotiateLocalEcho = true;
         this.Port = 1123;
         this.ProxyHostname = '';
         this.ProxyPort = 1123;
@@ -8093,8 +8111,10 @@ var fTelnetClient = (function () {
         this._LastTimer = new Date().getTime();
     };
     fTelnetClient.prototype.OnConnectionLocalEcho = function (value) {
-        this._Options.LocalEcho = value;
-        this._Crt.LocalEcho = value;
+        if (this._Options.NegotiateLocalEcho) {
+            this._Options.LocalEcho = value;
+            this._Crt.LocalEcho = value;
+        }
     };
     fTelnetClient.prototype.OnConnectionIOError = function () {
         console.log('fTelnet.OnConnectionIOError');
