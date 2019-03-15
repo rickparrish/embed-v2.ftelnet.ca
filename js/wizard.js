@@ -8,7 +8,7 @@ $(document).ready(function () {
     Update();
 });
 
-var CheckBoxes = '#chkUniqueIds';
+var CheckBoxes = '#chkNegotiateLocalEcho, #chkUniqueIds';
 $(CheckBoxes).click(function () {
     Update();
 });
