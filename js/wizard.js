@@ -13,7 +13,7 @@ $(CheckBoxes).click(function () {
     Update();
 });
 
-var ComboBoxes = '#cboAutoConnect, #cboBareLFtoCRLF, #cboBitsPerSecond, #cboConnectionType, #cboEmulation, #cboEnter, #cboFileTransfer, #cboFont, #cboForceWss, #cboProxyServer, #cboVirtualKeyboardVisible';
+var ComboBoxes = '#cboAutoConnect, #cboBareLFtoCRLF, #cboBitsPerSecond, #cboConnectionType, #cboEmulation, #cboEnter, #cboFileTransfer, #cboFont, #cboForceWss, #cboProxyServer, #cboSendLocation, #cboVirtualKeyboardVisible';
 $(ComboBoxes).change(function () {
     Update();
 });
@@ -124,6 +124,7 @@ function Update() {
     }
     SnippetScriptOptions += '    Options' + ClientId + '.ScreenColumns = ' + $('#txtScreenColumns').val() + ';\r\n';
     SnippetScriptOptions += '    Options' + ClientId + '.ScreenRows = ' + $('#txtScreenRows').val() + ';\r\n';
+    SnippetScriptOptions += '    Options' + ClientId + '.SendLocation = ' + $('#cboSendLocation').val() + ';\r\n';
     if (SplashScreen !== '') {
         SnippetScriptOptions += '    Options' + ClientId + '.SplashScreen = \'' + SplashScreen + '\';\r\n';
     }

@@ -9,8 +9,8 @@
 
     <title>fTelnet Embed Wizard</title>
 
-    <link href="css/bootstrap.min.css?v=2019-03-15" rel="stylesheet" />
-    <link href="css/site.css?v=2019-03-15" rel="stylesheet" />
+    <link href="css/bootstrap.min.css?v=2019-08-31" rel="stylesheet" />
+    <link href="css/site.css?v=2019-08-31" rel="stylesheet" />
 </head>
 <body>
     <!-- Fixed navbar -->
@@ -100,7 +100,18 @@
                         <option value="false">No, my server doesn't have anything to download</option>
                     </select>
                 </div>
-            </div>
+
+                <div class="col-xs-6">
+                    <label class="control-label" for="cboSendLocation">Answer SendLocation requests?</label>
+                    &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="left" title="Answer SendLocation requests?" data-content="Some BBS software requests the user's real IP address via the SendLocation negotiation option (because proxies mask the user's real IP).  Either fTelnet, the proxies, or the BBS software sometimes screw up the handling of the SendLocation response, causing the user's IP address to be pre-populated at the login dialog.  If your BBS does not need the user's real IP address, you can disable this feature to prevent this issue from happening."><span class="glyphicon glyphicon-info-sign"></span></a>
+                    <select class="form-control" id="cboSendLocation">
+                        <option value="true">Yes, my BBS uses SendLocation to get the user's real IP</option>
+                        <option value="false">No, my BBS does not use SendLocation so ignore requests</option>
+                    </select>
+                </div>
+
+                <div class="clearfix"></div>
+			</div>
                
             <h2>Connection Settings</h2>
 
@@ -321,8 +332,8 @@
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
     <script>$.fn.modal || document.write('<script src="js/bootstrap.min.js"><\/script>')</script>
 
-    <script src="js/wizard.js?v=2019-03-15.1"></script>
-    <script src="//embed-v2.ftelnet.ca/ftelnet/ftelnet.rip.xfer.min.js?v=2019-03-15" id="fTelnetScript"></script>
+    <script src="js/wizard.js?v=2019-08-31.1"></script>
+    <script src="//embed-v2.ftelnet.ca/ftelnet/ftelnet.rip.xfer.min.js?v=2019-08-31" id="fTelnetScript"></script>
 
     <script>
       $(function () {
