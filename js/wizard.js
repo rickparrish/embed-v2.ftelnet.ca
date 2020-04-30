@@ -115,7 +115,7 @@ function Update() {
         var HostPorts = $('#cboProxyServer').val().split(':');
         SnippetScriptOptions += '    Options' + ClientId + '.ProxyHostname = \'proxy-' + HostPorts[0] + '.ftelnet.ca\';\r\n';
         SnippetScriptOptions += '    Options' + ClientId + '.ProxyPort = ' + HostPorts[1] + ';\r\n';
-        SnippetScriptOptions += '    Options' + ClientId + '.ProxyPort = ' + HostPorts[2] + ';\r\n';
+        SnippetScriptOptions += '    Options' + ClientId + '.ProxyPortSecure = ' + HostPorts[2] + ';\r\n';
     }        
     if ($('#cboConnectionType').val() === 'rlogin') {
         SnippetScriptOptions += '    Options' + ClientId + '.RLoginClientUsername = \'' + $('#txtRLoginClientUsername').val() + '\';\r\n';
