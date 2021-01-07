@@ -3730,7 +3730,7 @@ var TelnetConnection = (function (_super) {
         if (this._SendLocation) {
             try {
                 var xhr = new XMLHttpRequest();
-                xhr.open('get', '//myip.randm.ca', true);
+                xhr.open('get', 'https://text.ipv4.wtfismyip.com/', true);
                 xhr.onload = function () {
                     var status = xhr.status;
                     if (status === 200) {
@@ -3787,7 +3787,7 @@ var TelnetConnection = (function (_super) {
         var _this = this;
         if (this._SendLocation) {
             var xhr = new XMLHttpRequest();
-            xhr.open('get', '//myip.randm.ca', true);
+            xhr.open('get', 'https://text.ipv4.wtfismyip.com/', true);
             xhr.onload = function () {
                 var status = xhr.status;
                 if (status === 200) {
