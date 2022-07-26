@@ -113,7 +113,7 @@ function Update() {
     SnippetScriptOptions += '    Options' + ClientId + '.Port = ' + $('#txtPort').val() + ';\r\n';
     if ($('#cboProxyServer').val() !== 'none') {
         var HostPorts = $('#cboProxyServer').val().split(':');
-        SnippetScriptOptions += '    Options' + ClientId + '.ProxyHostname = \'proxy-' + HostPorts[0] + '.ftelnet.ca\';\r\n';
+        SnippetScriptOptions += '    Options' + ClientId + '.ProxyHostname = \'p-' + HostPorts[0] + '.ftelnet.ca\';\r\n';
         SnippetScriptOptions += '    Options' + ClientId + '.ProxyPort = ' + HostPorts[1] + ';\r\n';
         SnippetScriptOptions += '    Options' + ClientId + '.ProxyPortSecure = ' + HostPorts[2] + ';\r\n';
     }        
