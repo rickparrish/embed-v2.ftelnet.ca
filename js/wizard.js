@@ -4,7 +4,10 @@ var SnippetScriptOptions = '';
 var SplashScreen = '';
 
 $(document).ready(function () {
-    // Update, just in case they refreshed while on the wizard page
+    // Load the list of proxies
+    LoadProxies();
+
+    // Update the output, just in case they refreshed while on the wizard page
     Update();
 });
 
@@ -43,6 +46,20 @@ var TextBoxes = '#txtHostname, #txtPort, #txtRLoginClientUsername, #txtRLoginSer
 $(TextBoxes).keyup(function () {
     Update();
 });
+
+function LoadProxies() {
+    var opt = $('#optProxies');
+
+    $.getJSON('../proxy-servers.json', function(data) {
+        for (key in data) {
+            // Only process if the server has a Hostname property.  Some are only CNAMEs that redirect to real servers, and we don't want to list those
+            var server = data[key];
+            if (server['Hostname']) {
+                opt.append('<option value="' + server['Hostname'] + ':' + server['WsPort'] + ':' + server['WssPort'] + '">' + server['Country'] + ' (' + server['City'] + ')</option>')
+            }
+        }
+    });
+}
 
 function Update() {
     // Update visibility of RLogin settings
@@ -113,7 +130,7 @@ function Update() {
     SnippetScriptOptions += '    Options' + ClientId + '.Port = ' + $('#txtPort').val() + ';\r\n';
     if ($('#cboProxyServer').val() !== 'none') {
         var HostPorts = $('#cboProxyServer').val().split(':');
-        SnippetScriptOptions += '    Options' + ClientId + '.ProxyHostname = \'p-' + HostPorts[0] + '.ftelnet.ca\';\r\n';
+        SnippetScriptOptions += '    Options' + ClientId + '.ProxyHostname = \'' + HostPorts[0] + '\';\r\n';
         SnippetScriptOptions += '    Options' + ClientId + '.ProxyPort = ' + HostPorts[1] + ';\r\n';
         SnippetScriptOptions += '    Options' + ClientId + '.ProxyPortSecure = ' + HostPorts[2] + ';\r\n';
     }        

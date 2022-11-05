@@ -1,0 +1,65 @@
+{
+    "p-au.ftelnet.ca": {
+        "Continent": "Australia",
+        "Country": "Australia",
+        "City": "Sydney",
+        "Hostname": "p-au.ftelnet.ca",
+        "WsPort": 80,
+        "WssPort": 443,
+        "UptimeRobotApiKey": "m776347940-41118af8e6b6d24aefec52bc"
+    },
+    "proxy-au.ftelnet.ca": { "CNAME": "p-au.ftelnet.ca" },
+    "proxy-jp.ftelnet.ca": { "CNAME": "p-au.ftelnet.ca" },
+
+    "p-eu.ftelnet.ca": {
+        "Continent": "Europe",
+        "Country": "United Kingdom",
+        "City": "London",
+        "Hostname": "p-eu.ftelnet.ca",
+        "WsPort": 80,
+        "WssPort": 443,
+        "UptimeRobotApiKey": "m792349208-c308e68924d0e6d571fe7061"
+    },
+    "p-uk.ftelnet.ca": { "CNAME": "p-eu.ftelnet.ca" },
+    "p-nl.ftelnet.ca": { "CNAME": "p-eu.ftelnet.ca" },
+    "proxy-fr.ftelnet.ca": { "CNAME": "p-eu.ftelnet.ca" },
+    "proxy-nl.ftelnet.ca": { "CNAME": "p-eu.ftelnet.ca" },
+    "proxy-uk.ftelnet.ca": { "CNAME": "p-eu.ftelnet.ca" },
+
+    "p-us-east.ftelnet.ca": {
+        "Continent": "North America",
+        "Country": "United States",
+        "City": "Vint Hill, Virginia",
+        "Hostname": "p-us-east.ftelnet.ca",
+        "WsPort": 80,
+        "WssPort": 443,
+        "UptimeRobotApiKey": "m792346539-2c810e7495c457b5f3a6c098"
+    },
+    "p-ca-on.ftelnet.ca": { "CNAME": "p-us-east.ftelnet.ca" },
+    "p-us-ga.ftelnet.ca": { "CNAME": "p-us-east.ftelnet.ca" },
+    "p-us-nj.ftelnet.ca": { "CNAME": "p-us-east.ftelnet.ca" },
+    "p-us-tx.ftelnet.ca": { "CNAME": "p-us-east.ftelnet.ca" },
+    "p-us-va.ftelnet.ca": { "CNAME": "p-us-east.ftelnet.ca" },
+    "proxy-ca-on.ftelnet.ca": { "CNAME": "p-us-east.ftelnet.ca" },
+    "proxy-us-atl.ftelnet.ca": { "CNAME": "p-us-east.ftelnet.ca" },
+    "proxy-us-fl.ftelnet.ca": { "CNAME": "p-us-east.ftelnet.ca" },
+    "proxy-us-ga.ftelnet.ca": { "CNAME": "p-us-east.ftelnet.ca" },
+    "proxy-us-jax.ftelnet.ca": { "CNAME": "p-us-east.ftelnet.ca" },
+    "proxy-us-nj.ftelnet.ca": { "CNAME": "p-us-east.ftelnet.ca" },
+    "proxy-us-tx.ftelnet.ca": { "CNAME": "p-us-east.ftelnet.ca" },
+    "proxy-us-va.ftelnet.ca": { "CNAME": "p-us-east.ftelnet.ca" },
+
+    "p-us-west.ftelnet.ca": {
+        "Continent": "North America",
+        "Country": "United States",
+        "City": "Seattle, WA",
+        "Hostname": "p-us-west.ftelnet.ca",
+        "WsPort": 80,
+        "WssPort": 443,
+        "UptimeRobotApiKey": "m790813181-4f41770317add54ad7046471"
+    },
+    "p-us-ca.ftelnet.ca": { "CNAME": "p-us-west.ftelnet.ca" },
+    "p-us-wa.ftelnet.ca": { "CNAME": "p-us-west.ftelnet.ca" },
+    "proxy-us-ca.ftelnet.ca": { "CNAME": "p-us-west.ftelnet.ca" },
+    "proxy-us-lax.ftelnet.ca": { "CNAME": "p-us-west.ftelnet.ca" }
+}
