@@ -29,7 +29,7 @@
     "p-us-east.ftelnet.ca": {
         "Continent": "North America",
         "Country": "United States",
-        "City": "Vint Hill, Virginia",
+        "City": "Chicago, IL",
         "Hostname": "p-us-east.ftelnet.ca",
         "WsPort": 80,
         "WssPort": 443,
@@ -52,7 +52,7 @@
     "p-us-west.ftelnet.ca": {
         "Continent": "North America",
         "Country": "United States",
-        "City": "Seattle, WA",
+        "City": "San Jose, CA",
         "Hostname": "p-us-west.ftelnet.ca",
         "WsPort": 80,
         "WssPort": 443,
