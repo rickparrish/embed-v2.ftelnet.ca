@@ -164,6 +164,7 @@ if (!(typeof Blob === "function" || typeof Blob === "object") || typeof URL === 
             return builder.getBlob(type);
         };
     }(typeof self !== "undefined" && self || typeof window !== "undefined" && window || this.content || this));
+
 /*! FileSaver.js
  *  A saveAs() FileSaver implementation.
  *  2014-01-24
@@ -411,42 +412,7 @@ var saveAs = saveAs
 // with an attribute `content` that corresponds to the window
 
 if (typeof module !== "undefined") module.exports = saveAs;
-var Benchmarks = (function () {
-    function Benchmarks() {
-    }
-    Benchmarks.Alert = function () {
-        var text = '';
-        for (var i = 0; i < this._Names.length; i++) {
-            text += this._Names[i] + ': ' + this._Benchmarks[this._Names[i]].CumulativeElapsed + '\n';
-        }
-        alert(text);
-    };
-    Benchmarks.Reset = function () {
-        this._Benchmarks = {};
-        this._Names = [];
-    };
-    Benchmarks.Start = function (name) {
-        if (this._Benchmarks[name] === undefined) {
-            this._Benchmarks[name] = new Benchmark();
-            this._Names.push(name);
-        }
-        this._Benchmarks[name].Start();
-        return this._Benchmarks[name];
-    };
-    Benchmarks.Stop = function (name) {
-        this._Benchmarks[name].Stop();
-    };
-    Benchmarks.Log = function () {
-        for (var i = 0; i < this._Names.length; i++) {
-            var text = '';
-            text += this._Names[i] + ': ' + this._Benchmarks[this._Names[i]].CumulativeElapsed;
-            console.log(text);
-        }
-    };
-    return Benchmarks;
-}());
-Benchmarks._Benchmarks = {};
-Benchmarks._Names = [];
+
 var Benchmark = (function () {
     function Benchmark() {
         this._CumulativeElapsed = 0;
@@ -489,6 +455,42 @@ var Benchmark = (function () {
         }
     };
     return Benchmark;
+}());
+var Benchmarks = (function () {
+    function Benchmarks() {
+    }
+    Benchmarks.Alert = function () {
+        var text = '';
+        for (var i = 0; i < this._Names.length; i++) {
+            text += this._Names[i] + ': ' + this._Benchmarks[this._Names[i]].CumulativeElapsed + '\n';
+        }
+        alert(text);
+    };
+    Benchmarks.Reset = function () {
+        this._Benchmarks = {};
+        this._Names = [];
+    };
+    Benchmarks.Start = function (name) {
+        if (this._Benchmarks[name] === undefined) {
+            this._Benchmarks[name] = new Benchmark();
+            this._Names.push(name);
+        }
+        this._Benchmarks[name].Start();
+        return this._Benchmarks[name];
+    };
+    Benchmarks.Stop = function (name) {
+        this._Benchmarks[name].Stop();
+    };
+    Benchmarks.Log = function () {
+        for (var i = 0; i < this._Names.length; i++) {
+            var text = '';
+            text += this._Names[i] + ': ' + this._Benchmarks[this._Names[i]].CumulativeElapsed;
+            console.log(text);
+        }
+    };
+    Benchmarks._Benchmarks = {};
+    Benchmarks._Names = [];
+    return Benchmarks;
 }());
 var ByteArray = (function () {
     function ByteArray() {
@@ -646,10 +648,10 @@ var ByteArray = (function () {
     };
     return ByteArray;
 }());
-var Clipboard = (function () {
-    function Clipboard() {
+var ClipboardHelper = (function () {
+    function ClipboardHelper() {
     }
-    Clipboard.GetData = function () {
+    ClipboardHelper.GetData = function () {
         if (document.queryCommandSupported('paste')) {
             var textArea = document.createElement('textarea');
             textArea.style.position = 'fixed';
@@ -681,7 +683,7 @@ var Clipboard = (function () {
             return prompt('Press CTRL-V then Enter to paste the text from your clipboard') || '';
         }
     };
-    Clipboard.SetData = function (text) {
+    ClipboardHelper.SetData = function (text) {
         if (document.queryCommandSupported('copy')) {
             var textArea = document.createElement('textarea');
             textArea.style.position = 'fixed';
@@ -712,7 +714,7 @@ var Clipboard = (function () {
             prompt('Press CTRL-C then Enter to copy the text to your clipboard', text);
         }
     };
-    return Clipboard;
+    return ClipboardHelper;
 }());
 var DetectMobileBrowser = (function () {
     function DetectMobileBrowser() {
@@ -749,7 +751,6 @@ var GetScrollbarWidth = (function () {
                 var outer = document.createElement('div');
                 outer.style.visibility = 'hidden';
                 outer.style.width = '100px';
-                outer.style.msOverflowStyle = 'scrollbar';
                 document.body.appendChild(outer);
                 var widthNoScroll = outer.offsetWidth;
                 outer.style.overflow = 'scroll';
@@ -919,6 +920,7 @@ var TypedEvent = (function () {
     };
     return TypedEvent;
 }());
+//# sourceMappingURL=common.js.map
 var Ansi = (function () {
     function Ansi(crt) {
         this.onesc0c = new TypedEvent();
@@ -1564,6 +1566,7 @@ var CharInfo = (function () {
             this.Blink = false;
             this.Ch = ' ';
             this.Fore24 = CrtFont.ANSI_COLOURS[Crt.LIGHTGRAY];
+            this.NeedsRedraw = false;
             this.Reverse = false;
             this.Underline = false;
         }
@@ -1611,6 +1614,7 @@ var Crt = (function () {
         this._ScreenSize = new Point(80, 25);
         this._ScrollbackPosition = -1;
         this._ScrollbackSize = 250;
+        this._SkipRedrawWhenSameFontSize = false;
         this._Transparent = false;
         this._UseModernScrollback = false;
         this._WindMin = 0;
@@ -1618,7 +1622,7 @@ var Crt = (function () {
         this._Container = container;
         this._UseModernScrollback = useModernScrollback;
         this._Font = new CrtFont();
-        this._Font.onchange.on(function () { _this.OnFontChanged(); });
+        this._Font.onchange.on(function (oldSize) { _this.OnFontChanged(oldSize); });
         this._Canvas = document.createElement('canvas');
         this._Canvas.className = 'fTelnetCrtCanvas';
         this._Canvas.innerHTML = 'Your browser does not support the HTML5 Canvas element!<br>The latest version of every major web browser supports this element, so please consider upgrading now:<ul><li><a href="http://www.mozilla.com/firefox/">Mozilla Firefox</a></li><li><a href="http://www.google.com/chrome">Google Chrome</a></li><li><a href="http://www.apple.com/safari/">Apple Safari</a></li><li><a href="http://www.opera.com/">Opera</a></li><li><a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home">MS Internet Explorer</a></li></ul>';
@@ -1834,7 +1838,10 @@ var Crt = (function () {
                 var Char = this._Font.GetChar(CharCodes[i], charInfo);
                 BGetChar.Stop();
                 var BPutImage = Benchmarks.Start('PutImage');
-                if (typeof Char !== 'undefined') {
+                if (typeof Char === 'undefined') {
+                    this._Buffer[y][x + i].NeedsRedraw = true;
+                }
+                else {
                     if (this._UseModernScrollback) {
                         this._CanvasContext.putImageData(Char, (x - 1 + i) * this._Font.Width, (y - 1 + this._ScrollbackSize) * this._Font.Height);
                     }
@@ -1981,7 +1988,22 @@ var Crt = (function () {
         var Cell = this._Buffer[Y][X];
         this.FastWrite(Cell.Ch, X, Y, Cell, false);
     };
-    Crt.prototype.OnFontChanged = function () {
+    Crt.prototype.OnFontChanged = function (oldSize) {
+        if ((oldSize.x == this._Font.Size.x) && (oldSize.y == this._Font.Size.y)) {
+            if (this._SkipRedrawWhenSameFontSize) {
+                if (typeof this._Buffer !== 'undefined') {
+                    for (var Y = 1; Y <= this._ScreenSize.y; Y++) {
+                        for (var X = 1; X <= this._ScreenSize.x; X++) {
+                            if (this._Buffer[Y][X].NeedsRedraw) {
+                                this.FastWrite(this._Buffer[Y][X].Ch, X, Y, this._Buffer[Y][X], false);
+                                this._Buffer[Y][X].NeedsRedraw = false;
+                            }
+                        }
+                    }
+                }
+                return;
+            }
+        }
         this._Cursor.Size = this._Font.Size;
         this._Canvas.width = this._Font.Width * this._ScreenSize.x;
         if (this._UseModernScrollback) {
@@ -1997,6 +2019,7 @@ var Crt = (function () {
             for (var Y = 1; Y <= this._ScreenSize.y; Y++) {
                 for (var X = 1; X <= this._ScreenSize.x; X++) {
                     this.FastWrite(this._Buffer[Y][X].Ch, X, Y, this._Buffer[Y][X], false);
+                    this._Buffer[Y][X].NeedsRedraw = false;
                 }
             }
         }
@@ -2435,7 +2458,7 @@ var Crt = (function () {
                         Text += '\r\n';
                     }
                 }
-                Clipboard.SetData(Text);
+                ClipboardHelper.SetData(Text);
             }
         }
         delete this._MouseDownPoint;
@@ -2746,6 +2769,13 @@ var Crt = (function () {
     Crt.prototype.ShowCursor = function () {
         this._Cursor.Visible = true;
     };
+    Object.defineProperty(Crt.prototype, "SkipRedrawWhenSameFontSize", {
+        set: function (value) {
+            this._SkipRedrawWhenSameFontSize = value;
+        },
+        enumerable: true,
+        configurable: true
+    });
     Object.defineProperty(Crt.prototype, "TextAttr", {
         get: function () {
             return this._CharInfo.Attr;
@@ -3281,41 +3311,41 @@ var Crt = (function () {
         }
         this.Write(text + '\r\n');
     };
+    Crt.BLACK = 0;
+    Crt.BLUE = 1;
+    Crt.GREEN = 2;
+    Crt.CYAN = 3;
+    Crt.RED = 4;
+    Crt.MAGENTA = 5;
+    Crt.BROWN = 6;
+    Crt.LIGHTGRAY = 7;
+    Crt.DARKGRAY = 8;
+    Crt.LIGHTBLUE = 9;
+    Crt.LIGHTGREEN = 10;
+    Crt.LIGHTCYAN = 11;
+    Crt.LIGHTRED = 12;
+    Crt.LIGHTMAGENTA = 13;
+    Crt.YELLOW = 14;
+    Crt.WHITE = 15;
+    Crt.BLINK = 128;
+    Crt.PETSCII_BLACK = 0;
+    Crt.PETSCII_WHITE = 1;
+    Crt.PETSCII_RED = 2;
+    Crt.PETSCII_CYAN = 3;
+    Crt.PETSCII_PURPLE = 4;
+    Crt.PETSCII_GREEN = 5;
+    Crt.PETSCII_BLUE = 6;
+    Crt.PETSCII_YELLOW = 7;
+    Crt.PETSCII_ORANGE = 8;
+    Crt.PETSCII_BROWN = 9;
+    Crt.PETSCII_LIGHTRED = 10;
+    Crt.PETSCII_DARKGRAY = 11;
+    Crt.PETSCII_GRAY = 12;
+    Crt.PETSCII_LIGHTGREEN = 13;
+    Crt.PETSCII_LIGHTBLUE = 14;
+    Crt.PETSCII_LIGHTGRAY = 15;
     return Crt;
 }());
-Crt.BLACK = 0;
-Crt.BLUE = 1;
-Crt.GREEN = 2;
-Crt.CYAN = 3;
-Crt.RED = 4;
-Crt.MAGENTA = 5;
-Crt.BROWN = 6;
-Crt.LIGHTGRAY = 7;
-Crt.DARKGRAY = 8;
-Crt.LIGHTBLUE = 9;
-Crt.LIGHTGREEN = 10;
-Crt.LIGHTCYAN = 11;
-Crt.LIGHTRED = 12;
-Crt.LIGHTMAGENTA = 13;
-Crt.YELLOW = 14;
-Crt.WHITE = 15;
-Crt.BLINK = 128;
-Crt.PETSCII_BLACK = 0;
-Crt.PETSCII_WHITE = 1;
-Crt.PETSCII_RED = 2;
-Crt.PETSCII_CYAN = 3;
-Crt.PETSCII_PURPLE = 4;
-Crt.PETSCII_GREEN = 5;
-Crt.PETSCII_BLUE = 6;
-Crt.PETSCII_YELLOW = 7;
-Crt.PETSCII_ORANGE = 8;
-Crt.PETSCII_BROWN = 9;
-Crt.PETSCII_LIGHTRED = 10;
-Crt.PETSCII_DARKGRAY = 11;
-Crt.PETSCII_GRAY = 12;
-Crt.PETSCII_LIGHTGREEN = 13;
-Crt.PETSCII_LIGHTBLUE = 14;
-Crt.PETSCII_LIGHTGRAY = 15;
 var CrtFont = (function () {
     function CrtFont() {
         this.onchange = new TypedEvent();
@@ -3464,6 +3494,7 @@ var CrtFont = (function () {
     };
     CrtFont.prototype.OnPngLoad = function () {
         if (this._Loading === 1) {
+            var oldSize = new Point(this._Size.x, this._Size.y);
             this._Name = this._NewName;
             this._Size = this._NewSize;
             this._Canvas.width = this._Png.width;
@@ -3471,7 +3502,7 @@ var CrtFont = (function () {
             this._CanvasContext.drawImage(this._Png, 0, 0);
             this._CharMap = [];
             this._Loading -= 1;
-            this.onchange.trigger();
+            this.onchange.trigger(oldSize);
         }
         else {
             this._Loading -= 1;
@@ -3491,17 +3522,17 @@ var CrtFont = (function () {
         enumerable: true,
         configurable: true
     });
+    CrtFont.TRANSPARENT_CHARCODE = 1000;
+    CrtFont.ANSI_COLOURS = [
+        0x000000, 0x0000A8, 0x00A800, 0x00A8A8, 0xA80000, 0xA800A8, 0xA85400, 0xA8A8A8,
+        0x545454, 0x5454FC, 0x54FC54, 0x54FCFC, 0xFC5454, 0xFC54FC, 0xFCFC54, 0xFCFCFC
+    ];
+    CrtFont.PETSCII_COLOURS = [
+        0x000000, 0xFDFEFC, 0xBE1A24, 0x30E6C6, 0xB41AE2, 0x1FD21E, 0x211BAE, 0xDFF60A,
+        0xB84104, 0x6A3304, 0xFE4A57, 0x424540, 0x70746F, 0x59FE59, 0x5F53FE, 0xA4A7A2
+    ];
     return CrtFont;
 }());
-CrtFont.TRANSPARENT_CHARCODE = 1000;
-CrtFont.ANSI_COLOURS = [
-    0x000000, 0x0000A8, 0x00A800, 0x00A8A8, 0xA80000, 0xA800A8, 0xA85400, 0xA8A8A8,
-    0x545454, 0x5454FC, 0x54FC54, 0x54FCFC, 0xFC5454, 0xFC54FC, 0xFCFC54, 0xFCFCFC
-];
-CrtFont.PETSCII_COLOURS = [
-    0x000000, 0xFDFEFC, 0xBE1A24, 0x30E6C6, 0xB41AE2, 0x1FD21E, 0x211BAE, 0xDFF60A,
-    0xB84104, 0x6A3304, 0xFE4A57, 0x424540, 0x70746F, 0x59FE59, 0x5F53FE, 0xA4A7A2
-];
 var CrtFonts = (function () {
     function CrtFonts() {
     }
@@ -3560,10 +3591,10 @@ var CrtFonts = (function () {
     CrtFonts.HasFont = function (font) {
         return (this._FontNames.indexOf(font) >= 0);
     };
+    CrtFonts._FontNames = ['Amiga-BStrict_8x8', 'Amiga-BStruct_8x8', 'Amiga-MicroKnight_8x16', 'Amiga-MicroKnight_8x8', 'Amiga-MoSoul_8x16', 'Amiga-MoSoul_8x8', 'Amiga-PotNoodle_8x11', 'Amiga-PotNoodle_8x16', 'Amiga-TopazPlus_8x11', 'Amiga-Topaz_8x11', 'Amiga-Topaz_8x16', 'Atari-Arabic_16x16', 'Atari-Arabic_8x16', 'Atari-Graphics_16x16', 'Atari-Graphics_8x16', 'Atari-Graphics_8x8', 'Atari-International_16x16', 'Atari-International_8x16', 'C128-Lower_8x16', 'C128-Upper_8x16', 'C128-Upper_8x8', 'C128_Lower_8x8', 'C64-Lower_16x16', 'C64-Lower_8x16', 'C64-Lower_8x8', 'C64-Upper_16x16', 'C64-Upper_8x16', 'C64-Upper_8x8', 'CP437_10x19', 'CP437_12x23', 'CP437_6x8', 'CP437_7x12', 'CP437_8x12', 'CP437_8x13', 'CP437_8x14', 'CP437_8x16', 'CP437_8x8', 'CP437_9x16', 'CP737_12x23', 'CP737_9x16', 'CP775_9x16', 'CP850_10x19', 'CP850_12x23', 'CP850_8x13', 'CP850_9x16', 'CP852_10x19', 'CP852_12x23', 'CP852_9x16', 'CP855_9x16', 'CP857_9x16', 'CP860_9x16', 'CP861_9x16', 'CP862_10x19', 'CP863_9x16', 'CP865_10x19', 'CP865_12x23', 'CP865_8x13', 'CP865_9x16', 'CP866_9x16', 'CP869_9x16', 'RIP_7x8', 'RIP_7x14', 'RIP_8x8', 'RIP_8x14', 'RIP_16x14', 'SyncTerm-0_8x14', 'SyncTerm-0_8x16', 'SyncTerm-0_8x8', 'SyncTerm-10_8x16', 'SyncTerm-11_8x14', 'SyncTerm-11_8x16', 'SyncTerm-11_8x8', 'SyncTerm-12_8x16', 'SyncTerm-13_8x16', 'SyncTerm-14_8x14', 'SyncTerm-14_8x16', 'SyncTerm-14_8x8', 'SyncTerm-15_8x14', 'SyncTerm-15_8x16', 'SyncTerm-15_8x8', 'SyncTerm-16_8x14', 'SyncTerm-16_8x16', 'SyncTerm-16_8x8', 'SyncTerm-17_8x16', 'SyncTerm-17_8x8', 'SyncTerm-18_8x14', 'SyncTerm-18_8x16', 'SyncTerm-18_8x8', 'SyncTerm-19_8x16', 'SyncTerm-19_8x8', 'SyncTerm-1_8x16', 'SyncTerm-20_8x14', 'SyncTerm-20_8x16', 'SyncTerm-20_8x8', 'SyncTerm-21_8x14', 'SyncTerm-21_8x16', 'SyncTerm-21_8x8', 'SyncTerm-22_8x16', 'SyncTerm-23_8x14', 'SyncTerm-23_8x16', 'SyncTerm-23_8x8', 'SyncTerm-24_8x14', 'SyncTerm-24_8x16', 'SyncTerm-24_8x8', 'SyncTerm-25_8x14', 'SyncTerm-25_8x16', 'SyncTerm-25_8x8', 'SyncTerm-26_8x16', 'SyncTerm-26_8x8', 'SyncTerm-27_8x16', 'SyncTerm-28_8x14', 'SyncTerm-28_8x16', 'SyncTerm-28_8x8', 'SyncTerm-29_8x14', 'SyncTerm-29_8x16', 'SyncTerm-29_8x8', 'SyncTerm-2_8x14', 'SyncTerm-2_8x16', 'SyncTerm-2_8x8', 'SyncTerm-30_8x16', 'SyncTerm-31_8x16', 'SyncTerm-32_8x16', 'SyncTerm-32_8x8', 'SyncTerm-33_8x16', 'SyncTerm-33_8x8', 'SyncTerm-34_8x16', 'SyncTerm-34_8x8', 'SyncTerm-35_8x16', 'SyncTerm-35_8x8', 'SyncTerm-36_8x16', 'SyncTerm-36_8x8', 'SyncTerm-37_8x16', 'SyncTerm-38_8x16', 'SyncTerm-39_8x16', 'SyncTerm-3_8x14', 'SyncTerm-3_8x16', 'SyncTerm-3_8x8', 'SyncTerm-40_8x16', 'SyncTerm-4_8x16', 'SyncTerm-5_8x16', 'SyncTerm-6_8x16', 'SyncTerm-7_8x14', 'SyncTerm-7_8x16', 'SyncTerm-7_8x8', 'SyncTerm-8_8x14', 'SyncTerm-8_8x16', 'SyncTerm-8_8x8', 'SyncTerm-9_8x14', 'SyncTerm-9_8x16', 'SyncTerm-9_8x8'];
+    CrtFonts._Fonts = [];
     return CrtFonts;
 }());
-CrtFonts._FontNames = ['Amiga-BStrict_8x8', 'Amiga-BStruct_8x8', 'Amiga-MicroKnight_8x16', 'Amiga-MicroKnight_8x8', 'Amiga-MoSoul_8x16', 'Amiga-MoSoul_8x8', 'Amiga-PotNoodle_8x11', 'Amiga-PotNoodle_8x16', 'Amiga-TopazPlus_8x11', 'Amiga-Topaz_8x11', 'Amiga-Topaz_8x16', 'Atari-Arabic_16x16', 'Atari-Arabic_8x16', 'Atari-Graphics_16x16', 'Atari-Graphics_8x16', 'Atari-Graphics_8x8', 'Atari-International_16x16', 'Atari-International_8x16', 'C128-Lower_8x16', 'C128-Upper_8x16', 'C128-Upper_8x8', 'C128_Lower_8x8', 'C64-Lower_16x16', 'C64-Lower_8x16', 'C64-Lower_8x8', 'C64-Upper_16x16', 'C64-Upper_8x16', 'C64-Upper_8x8', 'CP437_10x19', 'CP437_12x23', 'CP437_6x8', 'CP437_7x12', 'CP437_8x12', 'CP437_8x13', 'CP437_8x14', 'CP437_8x16', 'CP437_8x8', 'CP437_9x16', 'CP737_12x23', 'CP737_9x16', 'CP775_9x16', 'CP850_10x19', 'CP850_12x23', 'CP850_8x13', 'CP850_9x16', 'CP852_10x19', 'CP852_12x23', 'CP852_9x16', 'CP855_9x16', 'CP857_9x16', 'CP860_9x16', 'CP861_9x16', 'CP862_10x19', 'CP863_9x16', 'CP865_10x19', 'CP865_12x23', 'CP865_8x13', 'CP865_9x16', 'CP866_9x16', 'CP869_9x16', 'RIP_7x8', 'RIP_7x14', 'RIP_8x8', 'RIP_8x14', 'RIP_16x14', 'SyncTerm-0_8x14', 'SyncTerm-0_8x16', 'SyncTerm-0_8x8', 'SyncTerm-10_8x16', 'SyncTerm-11_8x14', 'SyncTerm-11_8x16', 'SyncTerm-11_8x8', 'SyncTerm-12_8x16', 'SyncTerm-13_8x16', 'SyncTerm-14_8x14', 'SyncTerm-14_8x16', 'SyncTerm-14_8x8', 'SyncTerm-15_8x14', 'SyncTerm-15_8x16', 'SyncTerm-15_8x8', 'SyncTerm-16_8x14', 'SyncTerm-16_8x16', 'SyncTerm-16_8x8', 'SyncTerm-17_8x16', 'SyncTerm-17_8x8', 'SyncTerm-18_8x14', 'SyncTerm-18_8x16', 'SyncTerm-18_8x8', 'SyncTerm-19_8x16', 'SyncTerm-19_8x8', 'SyncTerm-1_8x16', 'SyncTerm-20_8x14', 'SyncTerm-20_8x16', 'SyncTerm-20_8x8', 'SyncTerm-21_8x14', 'SyncTerm-21_8x16', 'SyncTerm-21_8x8', 'SyncTerm-22_8x16', 'SyncTerm-23_8x14', 'SyncTerm-23_8x16', 'SyncTerm-23_8x8', 'SyncTerm-24_8x14', 'SyncTerm-24_8x16', 'SyncTerm-24_8x8', 'SyncTerm-25_8x14', 'SyncTerm-25_8x16', 'SyncTerm-25_8x8', 'SyncTerm-26_8x16', 'SyncTerm-26_8x8', 'SyncTerm-27_8x16', 'SyncTerm-28_8x14', 'SyncTerm-28_8x16', 'SyncTerm-28_8x8', 'SyncTerm-29_8x14', 'SyncTerm-29_8x16', 'SyncTerm-29_8x8', 'SyncTerm-2_8x14', 'SyncTerm-2_8x16', 'SyncTerm-2_8x8', 'SyncTerm-30_8x16', 'SyncTerm-31_8x16', 'SyncTerm-32_8x16', 'SyncTerm-32_8x8', 'SyncTerm-33_8x16', 'SyncTerm-33_8x8', 'SyncTerm-34_8x16', 'SyncTerm-34_8x8', 'SyncTerm-35_8x16', 'SyncTerm-35_8x8', 'SyncTerm-36_8x16', 'SyncTerm-36_8x8', 'SyncTerm-37_8x16', 'SyncTerm-38_8x16', 'SyncTerm-39_8x16', 'SyncTerm-3_8x14', 'SyncTerm-3_8x16', 'SyncTerm-3_8x8', 'SyncTerm-40_8x16', 'SyncTerm-4_8x16', 'SyncTerm-5_8x16', 'SyncTerm-6_8x16', 'SyncTerm-7_8x14', 'SyncTerm-7_8x16', 'SyncTerm-7_8x8', 'SyncTerm-8_8x14', 'SyncTerm-8_8x16', 'SyncTerm-8_8x8', 'SyncTerm-9_8x14', 'SyncTerm-9_8x16', 'SyncTerm-9_8x8'];
-CrtFonts._Fonts = [];
 CrtFonts.__ctor();
 var Cursor = (function () {
     function Cursor(colour, size) {
@@ -3651,6 +3682,17 @@ var Cursor = (function () {
     });
     return Cursor;
 }());
+var KeyPressEvent = (function () {
+    function KeyPressEvent(keyEvent, keyString) {
+        this.altKey = keyEvent.altKey;
+        this.charCode = keyEvent.charCode;
+        this.ctrlKey = keyEvent.ctrlKey;
+        this.keyCode = keyEvent.keyCode;
+        this.keyString = keyString;
+        this.shiftKey = keyEvent.shiftKey;
+    }
+    return KeyPressEvent;
+}());
 var KeyboardKeys;
 (function (KeyboardKeys) {
     KeyboardKeys[KeyboardKeys["ALTERNATE"] = 18] = "ALTERNATE";
@@ -3692,17 +3734,7 @@ var KeyboardKeys;
     KeyboardKeys[KeyboardKeys["WINDOWS"] = 1003] = "WINDOWS";
     KeyboardKeys[KeyboardKeys["UP"] = 38] = "UP";
 })(KeyboardKeys || (KeyboardKeys = {}));
-var KeyPressEvent = (function () {
-    function KeyPressEvent(keyEvent, keyString) {
-        this.altKey = keyEvent.altKey;
-        this.charCode = keyEvent.charCode;
-        this.ctrlKey = keyEvent.ctrlKey;
-        this.keyCode = keyEvent.keyCode;
-        this.keyString = keyString;
-        this.shiftKey = keyEvent.shiftKey;
-    }
-    return KeyPressEvent;
-}());
+//# sourceMappingURL=crt.js.map
 var RLoginCommand;
 (function (RLoginCommand) {
     RLoginCommand[RLoginCommand["Cookie"] = 255] = "Cookie";
@@ -3782,10 +3814,24 @@ var WebSocketConnection = (function () {
         this._WasConnected = false;
         if (UseCordovaSocket) {
             this._CordovaSocket = new Socket();
-            this._CordovaSocket.open(hostname, port, function () { _this.OnSocketOpen(); }, function (message) { var e = new ErrorEvent(); e.initErrorEvent('Socket', true, false, message, '', -1); _this.OnSocketError(e); });
+            this._CordovaSocket.open(hostname, port, function () { _this.OnSocketOpen(); }, function (message) {
+                var e = new ErrorEvent('Socket', {
+                    bubbles: true,
+                    cancelable: true,
+                    message: message
+                });
+                _this.OnSocketError(e);
+            });
             this._CordovaSocket.onClose = function () { _this.OnSocketClose(); };
             this._CordovaSocket.onData = function (data) { _this.OnCordovaSocketData(data); };
-            this._CordovaSocket.onError = function (message) { var e = new ErrorEvent(); e.initErrorEvent('Socket', true, false, message, '', -1); _this.OnSocketError(e); };
+            this._CordovaSocket.onError = function (message) {
+                var e = new ErrorEvent('Socket', {
+                    bubbles: true,
+                    cancelable: false,
+                    message: message
+                });
+                _this.OnSocketError(e);
+            };
         }
         else {
             var Protocols;
@@ -3997,11 +4043,19 @@ var WebSocketConnection = (function () {
     };
     return WebSocketConnection;
 }());
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var RLoginConnection = (function (_super) {
     __extends(RLoginConnection, _super);
     function RLoginConnection() {
@@ -4624,6 +4678,7 @@ var TelnetOption;
     TelnetOption[TelnetOption["SENDURL"] = 48] = "SENDURL";
     TelnetOption[TelnetOption["FORWARD_X"] = 49] = "FORWARD_X";
 })(TelnetOption || (TelnetOption = {}));
+//# sourceMappingURL=connections.js.map
 var BorderStyle;
 (function (BorderStyle) {
     BorderStyle[BorderStyle["Single"] = 0] = "Single";
@@ -4822,11 +4877,19 @@ var CrtControl = (function () {
     });
     return CrtControl;
 }());
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var CrtLabel = (function (_super) {
     __extends(CrtLabel, _super);
     function CrtLabel(crt, parent, left, top, width, text, textAlign, foreColour, backColour) {
@@ -5247,69 +5310,641 @@ var ProgressBarStyle;
     ProgressBarStyle[ProgressBarStyle["Continuous"] = 219] = "Continuous";
     ProgressBarStyle[ProgressBarStyle["Marquee"] = 0] = "Marquee";
 })(ProgressBarStyle || (ProgressBarStyle = {}));
-var Rectangle = (function () {
-    function Rectangle(x, y, width, height) {
-        this.height = 0;
-        this.width = 0;
-        this.x = 0;
-        this.y = 0;
-        if (typeof x !== 'undefined') {
-            this.x = x;
-        }
-        if (typeof y !== 'undefined') {
-            this.y = y;
-        }
-        if (typeof width !== 'undefined') {
-            this.width = width;
-        }
-        if (typeof height !== 'undefined') {
-            this.height = height;
-        }
+//# sourceMappingURL=crtcontrols.js.map
+var CRC = (function () {
+    function CRC() {
     }
-    Object.defineProperty(Rectangle.prototype, "bottom", {
-        get: function () {
-            return this.y + this.height;
-        },
-        set: function (value) {
-            this.height = value - this.top;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Rectangle.prototype, "left", {
-        get: function () {
-            return this.x;
-        },
-        set: function (value) {
-            this.width = this.right - value;
-            this.x = value;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Rectangle.prototype, "right", {
-        get: function () {
-            return this.x + this.width;
-        },
-        set: function (value) {
-            this.width = value - this.left;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Rectangle.prototype, "top", {
-        get: function () {
-            return this.y;
-        },
-        set: function (value) {
-            this.height = this.bottom - value;
-            this.y = value;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return Rectangle;
+    CRC.Calculate16 = function (bytes) {
+        var CRC = 0;
+        var OldPosition = bytes.position;
+        bytes.position = 0;
+        while (bytes.bytesAvailable > 0) {
+            CRC = this.UpdateCrc(bytes.readUnsignedByte(), CRC);
+        }
+        CRC = this.UpdateCrc(0, CRC);
+        CRC = this.UpdateCrc(0, CRC);
+        bytes.position = OldPosition;
+        return CRC;
+    };
+    CRC.UpdateCrc = function (curByte, curCrc) {
+        return (this.CRC_TABLE[(curCrc >> 8) & 0x00FF] ^ (curCrc << 8) ^ curByte) & 0xFFFF;
+    };
+    CRC.CRC_TABLE = [
+        0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
+        0x8108, 0x9129, 0xa14a, 0xb16b, 0xc18c, 0xd1ad, 0xe1ce, 0xf1ef,
+        0x1231, 0x0210, 0x3273, 0x2252, 0x52b5, 0x4294, 0x72f7, 0x62d6,
+        0x9339, 0x8318, 0xb37b, 0xa35a, 0xd3bd, 0xc39c, 0xf3ff, 0xe3de,
+        0x2462, 0x3443, 0x0420, 0x1401, 0x64e6, 0x74c7, 0x44a4, 0x5485,
+        0xa56a, 0xb54b, 0x8528, 0x9509, 0xe5ee, 0xf5cf, 0xc5ac, 0xd58d,
+        0x3653, 0x2672, 0x1611, 0x0630, 0x76d7, 0x66f6, 0x5695, 0x46b4,
+        0xb75b, 0xa77a, 0x9719, 0x8738, 0xf7df, 0xe7fe, 0xd79d, 0xc7bc,
+        0x48c4, 0x58e5, 0x6886, 0x78a7, 0x0840, 0x1861, 0x2802, 0x3823,
+        0xc9cc, 0xd9ed, 0xe98e, 0xf9af, 0x8948, 0x9969, 0xa90a, 0xb92b,
+        0x5af5, 0x4ad4, 0x7ab7, 0x6a96, 0x1a71, 0x0a50, 0x3a33, 0x2a12,
+        0xdbfd, 0xcbdc, 0xfbbf, 0xeb9e, 0x9b79, 0x8b58, 0xbb3b, 0xab1a,
+        0x6ca6, 0x7c87, 0x4ce4, 0x5cc5, 0x2c22, 0x3c03, 0x0c60, 0x1c41,
+        0xedae, 0xfd8f, 0xcdec, 0xddcd, 0xad2a, 0xbd0b, 0x8d68, 0x9d49,
+        0x7e97, 0x6eb6, 0x5ed5, 0x4ef4, 0x3e13, 0x2e32, 0x1e51, 0x0e70,
+        0xff9f, 0xefbe, 0xdfdd, 0xcffc, 0xbf1b, 0xaf3a, 0x9f59, 0x8f78,
+        0x9188, 0x81a9, 0xb1ca, 0xa1eb, 0xd10c, 0xc12d, 0xf14e, 0xe16f,
+        0x1080, 0x00a1, 0x30c2, 0x20e3, 0x5004, 0x4025, 0x7046, 0x6067,
+        0x83b9, 0x9398, 0xa3fb, 0xb3da, 0xc33d, 0xd31c, 0xe37f, 0xf35e,
+        0x02b1, 0x1290, 0x22f3, 0x32d2, 0x4235, 0x5214, 0x6277, 0x7256,
+        0xb5ea, 0xa5cb, 0x95a8, 0x8589, 0xf56e, 0xe54f, 0xd52c, 0xc50d,
+        0x34e2, 0x24c3, 0x14a0, 0x0481, 0x7466, 0x6447, 0x5424, 0x4405,
+        0xa7db, 0xb7fa, 0x8799, 0x97b8, 0xe75f, 0xf77e, 0xc71d, 0xd73c,
+        0x26d3, 0x36f2, 0x0691, 0x16b0, 0x6657, 0x7676, 0x4615, 0x5634,
+        0xd94c, 0xc96d, 0xf90e, 0xe92f, 0x99c8, 0x89e9, 0xb98a, 0xa9ab,
+        0x5844, 0x4865, 0x7806, 0x6827, 0x18c0, 0x08e1, 0x3882, 0x28a3,
+        0xcb7d, 0xdb5c, 0xeb3f, 0xfb1e, 0x8bf9, 0x9bd8, 0xabbb, 0xbb9a,
+        0x4a75, 0x5a54, 0x6a37, 0x7a16, 0x0af1, 0x1ad0, 0x2ab3, 0x3a92,
+        0xfd2e, 0xed0f, 0xdd6c, 0xcd4d, 0xbdaa, 0xad8b, 0x9de8, 0x8dc9,
+        0x7c26, 0x6c07, 0x5c64, 0x4c45, 0x3ca2, 0x2c83, 0x1ce0, 0x0cc1,
+        0xef1f, 0xff3e, 0xcf5d, 0xdf7c, 0xaf9b, 0xbfba, 0x8fd9, 0x9ff8,
+        0x6e17, 0x7e36, 0x4e55, 0x5e74, 0x2e93, 0x3eb2, 0x0ed1, 0x1ef0
+    ];
+    return CRC;
 }());
+var FileRecord = (function () {
+    function FileRecord(name, size) {
+        this._Data = new ByteArray();
+        this._Name = '';
+        this._Size = 0;
+        this._Name = name;
+        this._Size = size;
+    }
+    Object.defineProperty(FileRecord.prototype, "data", {
+        get: function () {
+            return this._Data;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(FileRecord.prototype, "name", {
+        get: function () {
+            return this._Name;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(FileRecord.prototype, "size", {
+        get: function () {
+            return this._Size;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    return FileRecord;
+}());
+var YModemReceive = (function () {
+    function YModemReceive(crt, connection) {
+        this.ontransfercomplete = new TypedEvent();
+        this.SOH = 0x01;
+        this.STX = 0x02;
+        this.EOT = 0x04;
+        this.ACK = 0x06;
+        this.CAN = 0x18;
+        this.CAPG = 'G'.charCodeAt(0);
+        this._ExpectingHeader = true;
+        this._Files = [];
+        this._LastGTime = 0;
+        this._NextByte = 0;
+        this._ShouldSendG = true;
+        this._TotalBytesReceived = 0;
+        this._Crt = crt;
+        this._Connection = connection;
+    }
+    YModemReceive.prototype.Cancel = function (reason) {
+        try {
+            this._Connection.writeByte(this.CAN);
+            this._Connection.writeByte(this.CAN);
+            this._Connection.writeByte(this.CAN);
+            this._Connection.writeByte(this.CAN);
+            this._Connection.writeByte(this.CAN);
+            this._Connection.writeString('\b\b\b\b\b     \b\b\b\b\b');
+        }
+        catch (ioe1) {
+            this.HandleIOError(ioe1);
+            return;
+        }
+        try {
+            this._Connection.readString();
+        }
+        catch (ioe2) {
+            this.HandleIOError(ioe2);
+            return;
+        }
+        this.CleanUp('Cancelling (' + reason + ')');
+    };
+    YModemReceive.prototype.CleanUp = function (message) {
+        var _this = this;
+        clearInterval(this._Timer);
+        this.lblStatus.Text = 'Status: ' + message;
+        setTimeout(function () { _this.Dispatch(); }, 3000);
+    };
+    YModemReceive.prototype.Dispatch = function () {
+        this.pnlMain.Hide();
+        this._Crt.ShowCursor();
+        this.ontransfercomplete.trigger();
+    };
+    YModemReceive.prototype.Download = function () {
+        var _this = this;
+        this._Timer = setInterval(function () { _this.OnTimer(); }, 50);
+        this._Crt.HideCursor();
+        this.pnlMain = new CrtPanel(this._Crt, undefined, 10, 5, 60, 14, BorderStyle.Single, Crt.WHITE, Crt.BLUE, 'YModem-G Receive Status (Hit CTRL+X to abort)', ContentAlignment.TopLeft);
+        this.lblFileCount = new CrtLabel(this._Crt, this.pnlMain, 2, 2, 56, 'Receiving file 1', ContentAlignment.Left, Crt.YELLOW, Crt.BLUE);
+        this.lblFileName = new CrtLabel(this._Crt, this.pnlMain, 2, 4, 56, 'File Name: ', ContentAlignment.Left, Crt.YELLOW, Crt.BLUE);
+        this.lblFileSize = new CrtLabel(this._Crt, this.pnlMain, 2, 5, 56, 'File Size: ', ContentAlignment.Left, Crt.YELLOW, Crt.BLUE);
+        this.lblFileReceived = new CrtLabel(this._Crt, this.pnlMain, 2, 6, 56, 'File Recv: ', ContentAlignment.Left, Crt.YELLOW, Crt.BLUE);
+        this.pbFileReceived = new CrtProgressBar(this._Crt, this.pnlMain, 2, 7, 56, ProgressBarStyle.Continuous);
+        this.lblTotalReceived = new CrtLabel(this._Crt, this.pnlMain, 2, 9, 56, 'Total Recv: ', ContentAlignment.Left, Crt.YELLOW, Crt.BLUE);
+        this.lblStatus = new CrtLabel(this._Crt, this.pnlMain, 2, 11, 56, 'Status: Transferring file(s)', ContentAlignment.Left, Crt.WHITE, Crt.BLUE);
+    };
+    YModemReceive.prototype.FileAt = function (index) {
+        return this._Files[index];
+    };
+    Object.defineProperty(YModemReceive.prototype, "FileCount", {
+        get: function () {
+            return this._Files.length;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    YModemReceive.prototype.HandleIOError = function (ioe) {
+        console.log('I/O Error: ' + ioe);
+        if (this._Connection.connected) {
+            this.CleanUp('Unhandled I/O error');
+        }
+        else {
+            this.CleanUp('Connection to server lost');
+        }
+    };
+    YModemReceive.prototype.OnTimer = function () {
+        while (this._Crt.KeyPressed()) {
+            var KPE = this._Crt.ReadKey();
+            if ((typeof KPE !== 'undefined') && (KPE.keyString.length > 0) && (KPE.keyString.charCodeAt(0) === this.CAN)) {
+                this.Cancel('User requested abort');
+            }
+        }
+        while (true) {
+            if (this._NextByte === 0) {
+                if (this._Connection.bytesAvailable === 0) {
+                    if (this._ShouldSendG && ((new Date()).getTime() - this._LastGTime > 3000)) {
+                        try {
+                            this._Connection.writeByte(this.CAPG);
+                            this._Connection.flush();
+                        }
+                        catch (ioe1) {
+                            this.HandleIOError(ioe1);
+                            return;
+                        }
+                        this._LastGTime = new Date().getTime();
+                    }
+                    return;
+                }
+                else {
+                    try {
+                        this._NextByte = this._Connection.readUnsignedByte();
+                    }
+                    catch (ioe2) {
+                        this.HandleIOError(ioe2);
+                        return;
+                    }
+                }
+            }
+            switch (this._NextByte) {
+                case this.CAN:
+                    this.CleanUp('Sender requested abort');
+                    break;
+                case this.SOH:
+                case this.STX:
+                    this._ShouldSendG = false;
+                    var BlockSize = (this._NextByte === this.STX) ? 1024 : 128;
+                    if (this._Connection.bytesAvailable < (1 + 1 + BlockSize + 1 + 1)) {
+                        return;
+                    }
+                    this._NextByte = 0;
+                    var InBlock = this._Connection.readUnsignedByte();
+                    var InBlockInverse = this._Connection.readUnsignedByte();
+                    if (InBlockInverse !== (255 - InBlock)) {
+                        this.Cancel('Bad block #: ' + InBlockInverse.toString() + ' !== 255-' + InBlock.toString());
+                        return;
+                    }
+                    var Packet = new ByteArray();
+                    this._Connection.readBytes(Packet, 0, BlockSize);
+                    var InCRC = this._Connection.readUnsignedShort();
+                    var OurCRC = CRC.Calculate16(Packet);
+                    if (InCRC !== OurCRC) {
+                        this.Cancel('Bad CRC: ' + InCRC.toString() + ' !== ' + OurCRC.toString());
+                        return;
+                    }
+                    if (this._ExpectingHeader) {
+                        if (InBlock !== 0) {
+                            this.Cancel('Expecting header got block ' + InBlock.toString());
+                            return;
+                        }
+                        this._ExpectingHeader = false;
+                        var FileName = '';
+                        var B = Packet.readUnsignedByte();
+                        while ((B !== 0) && (Packet.bytesAvailable > 0)) {
+                            FileName += String.fromCharCode(B);
+                            B = Packet.readUnsignedByte();
+                        }
+                        var Temp = '';
+                        var FileSize = 0;
+                        B = Packet.readUnsignedByte();
+                        while ((B >= 48) && (B <= 57) && (Packet.bytesAvailable > 0)) {
+                            Temp += String.fromCharCode(B);
+                            B = Packet.readUnsignedByte();
+                        }
+                        FileSize = parseInt(Temp, 10);
+                        if (FileName.length === 0) {
+                            this.CleanUp('File(s) successfully received!');
+                            return;
+                        }
+                        if (isNaN(FileSize) || (FileSize === 0)) {
+                            this.Cancel('File Size missing from header block');
+                            return;
+                        }
+                        this._File = new FileRecord(FileName, FileSize);
+                        this.lblFileCount.Text = 'Receiving file ' + (this._Files.length + 1).toString();
+                        this.lblFileName.Text = 'File Name: ' + FileName;
+                        this.lblFileSize.Text = 'File Size: ' + StringUtils.AddCommas(FileSize) + ' bytes';
+                        this.lblFileReceived.Text = 'File Recv: 0 bytes';
+                        this.pbFileReceived.Value = 0;
+                        this.pbFileReceived.Maximum = FileSize;
+                        try {
+                            this._Connection.writeByte(this.CAPG);
+                            this._Connection.flush();
+                        }
+                        catch (ioe3) {
+                            this.HandleIOError(ioe3);
+                            return;
+                        }
+                    }
+                    else {
+                        var BytesToWrite = Math.min(BlockSize, this._File.size - this._File.data.length);
+                        this._File.data.writeBytes(Packet, 0, BytesToWrite);
+                        this._TotalBytesReceived += BytesToWrite;
+                        this.lblFileReceived.Text = 'File Recv: ' + StringUtils.AddCommas(this._File.data.length) + ' bytes';
+                        this.pbFileReceived.Value = this._File.data.length;
+                        this.lblTotalReceived.Text = 'Total Recv: ' + StringUtils.AddCommas(this._TotalBytesReceived) + ' bytes';
+                    }
+                    break;
+                case this.EOT:
+                    this._ShouldSendG = true;
+                    try {
+                        this._Connection.writeByte(this.ACK);
+                        this._Connection.writeByte(this.CAPG);
+                        this._Connection.flush();
+                    }
+                    catch (ioe4) {
+                        this.HandleIOError(ioe4);
+                        return;
+                    }
+                    this._NextByte = 0;
+                    this._ExpectingHeader = true;
+                    this._Files.push(this._File);
+                    this.SaveFile(this._Files.length - 1);
+                    break;
+                default:
+                    this.Cancel('Unexpected byte: ' + this._NextByte.toString());
+                    return;
+            }
+        }
+    };
+    YModemReceive.prototype.SaveFile = function (index) {
+        var ByteString = this._Files[index].data.toString();
+        var Buffer = new ArrayBuffer(ByteString.length);
+        var View = new DataView(Buffer);
+        for (var i = 0; i < ByteString.length; i++) {
+            View.setUint8(i, ByteString.charCodeAt(i));
+        }
+        var FileBlob = new Blob([Buffer], { type: 'application/octet-binary' });
+        saveAs(FileBlob, this._Files[index].name);
+    };
+    return YModemReceive;
+}());
+var YModemSend = (function () {
+    function YModemSend(crt, connection) {
+        this.ontransfercomplete = new TypedEvent();
+        this.SOH = 0x01;
+        this.STX = 0x02;
+        this.EOT = 0x04;
+        this.ACK = 0x06;
+        this.NAK = 0x15;
+        this.CAN = 0x18;
+        this.SUB = 0x1A;
+        this.CAPG = 'G'.charCodeAt(0);
+        this._Block = 0;
+        this._EOTCount = 0;
+        this._FileBytesSent = 0;
+        this._FileCount = 0;
+        this._Files = [];
+        this._State = YModemSendState.WaitingForHeaderRequest;
+        this._TotalBytes = 0;
+        this._TotalBytesSent = 0;
+        this._Crt = crt;
+        this._Connection = connection;
+    }
+    YModemSend.prototype.Cancel = function (reason) {
+        try {
+            this._Connection.writeByte(this.CAN);
+            this._Connection.writeByte(this.CAN);
+            this._Connection.writeByte(this.CAN);
+            this._Connection.writeByte(this.CAN);
+            this._Connection.writeByte(this.CAN);
+            this._Connection.writeString('\b\b\b\b\b     \b\b\b\b\b');
+        }
+        catch (ioe1) {
+            this.HandleIOError(ioe1);
+            return;
+        }
+        try {
+            this._Connection.readString();
+        }
+        catch (ioe2) {
+            this.HandleIOError(ioe2);
+            return;
+        }
+        this.CleanUp('Cancelling (' + reason + ')');
+    };
+    YModemSend.prototype.CleanUp = function (message) {
+        var _this = this;
+        clearInterval(this._Timer);
+        this.lblStatus.Text = 'Status: ' + message;
+        setTimeout(function () { _this.Dispatch(); }, 3000);
+    };
+    YModemSend.prototype.Dispatch = function () {
+        this.pnlMain.Hide();
+        this._Crt.ShowCursor();
+        this.ontransfercomplete.trigger();
+    };
+    YModemSend.prototype.HandleIOError = function (ioe) {
+        console.log('I/O Error: ' + ioe);
+        if (this._Connection.connected) {
+            this.CleanUp('Unhandled I/O error');
+        }
+        else {
+            this.CleanUp('Connection to server lost');
+        }
+    };
+    YModemSend.prototype.OnTimer = function () {
+        while (this._Crt.KeyPressed()) {
+            var KPE = this._Crt.ReadKey();
+            if ((typeof KPE !== 'undefined') && (KPE.keyString.length > 0) && (KPE.keyString.charCodeAt(0) === this.CAN)) {
+                this.Cancel('User requested abort');
+            }
+        }
+        if ((this._State !== YModemSendState.SendingData) && (this._Connection.bytesAvailable === 0)) {
+            return;
+        }
+        var B = 0;
+        switch (this._State) {
+            case YModemSendState.WaitingForHeaderRequest:
+                try {
+                    B = this._Connection.readUnsignedByte();
+                }
+                catch (ioe1) {
+                    this.HandleIOError(ioe1);
+                    return;
+                }
+                if (B !== this.CAPG) {
+                    this.Cancel('Expecting G got ' + B.toString() + ' (State=' + this._State + ')');
+                    return;
+                }
+                try {
+                    this._Connection.readString();
+                }
+                catch (ioe2) {
+                    this.HandleIOError(ioe2);
+                    return;
+                }
+                var NextFile = this._Files.shift();
+                if (typeof NextFile === 'undefined') {
+                    this.SendEmptyHeaderBlock();
+                    this.CleanUp('File(s) successfully sent!');
+                    return;
+                }
+                this._File = NextFile;
+                this.lblFileCount.Text = 'Sending file ' + (this._FileCount - this._Files.length).toString() + ' of ' + this._FileCount.toString();
+                this.lblFileName.Text = 'File Name: ' + this._File.name;
+                this.lblFileSize.Text = 'File Size: ' + StringUtils.AddCommas(this._File.size) + ' bytes';
+                this.lblFileSent.Text = 'File Sent: 0 bytes';
+                this.pbFileSent.Value = 0;
+                this.pbFileSent.Maximum = this._File.size;
+                this.SendHeaderBlock();
+                this._Block = 1;
+                this._EOTCount = 0;
+                this._FileBytesSent = 0;
+                this._State = YModemSendState.WaitingForHeaderAck;
+                return;
+            case YModemSendState.WaitingForHeaderAck:
+                try {
+                    B = this._Connection.readUnsignedByte();
+                }
+                catch (ioe3) {
+                    this.HandleIOError(ioe3);
+                    return;
+                }
+                if ((B !== this.ACK) && (B !== this.CAPG)) {
+                    this.Cancel('Expecting ACK/G got ' + B.toString() + ' (State=' + this._State + ')');
+                    return;
+                }
+                if (B === this.ACK) {
+                    this._State = YModemSendState.WaitingForFileRequest;
+                }
+                else if (B === this.CAPG) {
+                    this._State = YModemSendState.SendingData;
+                }
+                return;
+            case YModemSendState.WaitingForFileRequest:
+                try {
+                    B = this._Connection.readUnsignedByte();
+                }
+                catch (ioe4) {
+                    this.HandleIOError(ioe4);
+                    return;
+                }
+                if (B !== this.CAPG) {
+                    this.Cancel('Expecting G got ' + B.toString() + ' (State=' + this._State + ')');
+                    return;
+                }
+                this._State = YModemSendState.SendingData;
+                return;
+            case YModemSendState.SendingData:
+                if (this.SendDataBlocks(16)) {
+                    this._State = YModemSendState.WaitingForFileAck;
+                }
+                return;
+            case YModemSendState.WaitingForFileAck:
+                try {
+                    B = this._Connection.readUnsignedByte();
+                }
+                catch (ioe5) {
+                    this.HandleIOError(ioe5);
+                    return;
+                }
+                if ((B !== this.ACK) && (B !== this.NAK)) {
+                    this.Cancel('Expecting (N)ACK got ' + B.toString() + ' (State=' + this._State + ')');
+                    return;
+                }
+                if (B === this.ACK) {
+                    this._State = YModemSendState.WaitingForHeaderRequest;
+                }
+                else if (B === this.NAK) {
+                    this.SendEOT();
+                }
+                return;
+        }
+    };
+    YModemSend.prototype.SendDataBlocks = function (blocks) {
+        for (var loop = 0; loop < blocks; loop++) {
+            var BytesToRead = Math.min(1024, this._File.data.bytesAvailable);
+            if (BytesToRead === 0) {
+                this.SendEOT();
+                return true;
+            }
+            else {
+                var Packet = new ByteArray();
+                this._File.data.readBytes(Packet, 0, BytesToRead);
+                if (Packet.length < 1024) {
+                    Packet.position = Packet.length;
+                    while (Packet.length < 1024) {
+                        Packet.writeByte(this.SUB);
+                    }
+                    Packet.position = 0;
+                }
+                try {
+                    this._Connection.writeByte(this.STX);
+                    this._Connection.writeByte(this._Block % 256);
+                    this._Connection.writeByte(255 - (this._Block % 256));
+                    this._Connection.writeBytes(Packet);
+                    this._Connection.writeShort(CRC.Calculate16(Packet));
+                    this._Connection.flush();
+                }
+                catch (ioe) {
+                    this.HandleIOError(ioe);
+                    return false;
+                }
+                this._Block++;
+                this._FileBytesSent += BytesToRead;
+                this._TotalBytesSent += BytesToRead;
+                this.lblFileSent.Text = 'File Sent: ' + StringUtils.AddCommas(this._FileBytesSent) + ' bytes';
+                this.pbFileSent.StepBy(BytesToRead);
+                this.lblTotalSent.Text = 'Total Sent: ' + StringUtils.AddCommas(this._TotalBytesSent) + ' bytes';
+                this.pbTotalSent.StepBy(BytesToRead);
+            }
+        }
+        return false;
+    };
+    YModemSend.prototype.SendEmptyHeaderBlock = function () {
+        var Packet = new ByteArray();
+        for (var i = 0; i < 128; i++) {
+            Packet.writeByte(0);
+        }
+        try {
+            this._Connection.writeByte(this.SOH);
+            this._Connection.writeByte(0);
+            this._Connection.writeByte(255);
+            this._Connection.writeBytes(Packet);
+            this._Connection.writeShort(CRC.Calculate16(Packet));
+            this._Connection.flush();
+        }
+        catch (ioe) {
+            this.HandleIOError(ioe);
+            return;
+        }
+    };
+    YModemSend.prototype.SendEOT = function () {
+        try {
+            this._Connection.writeByte(this.EOT);
+            this._Connection.flush();
+        }
+        catch (ioe) {
+            this.HandleIOError(ioe);
+            return;
+        }
+        this._EOTCount++;
+    };
+    YModemSend.prototype.SendHeaderBlock = function () {
+        var i = 0;
+        var Packet = new ByteArray();
+        for (i = 0; i < this._File.name.length; i++) {
+            Packet.writeByte(this._File.name.charCodeAt(i));
+        }
+        Packet.writeByte(0);
+        var Size = this._File.size.toString();
+        for (i = 0; i < Size.length; i++) {
+            Packet.writeByte(Size.charCodeAt(i));
+        }
+        if (Packet.length < 128) {
+            while (Packet.length < 128) {
+                Packet.writeByte(0);
+            }
+        }
+        else if (Packet.length === 128) {
+            i = 0;
+        }
+        else if (Packet.length < 1024) {
+            while (Packet.length < 1024) {
+                Packet.writeByte(0);
+            }
+        }
+        else if (Packet.length === 1024) {
+            i = 0;
+        }
+        else {
+            this.Cancel('Header packet exceeded 1024 bytes!');
+            return;
+        }
+        try {
+            this._Connection.writeByte(Packet.length === 128 ? this.SOH : this.STX);
+            this._Connection.writeByte(0);
+            this._Connection.writeByte(255);
+            this._Connection.writeBytes(Packet);
+            this._Connection.writeShort(CRC.Calculate16(Packet));
+            this._Connection.flush();
+        }
+        catch (ioe) {
+            this.HandleIOError(ioe);
+            return;
+        }
+    };
+    YModemSend.prototype.Upload = function (file, fileCount) {
+        var _this = this;
+        this._FileCount = fileCount;
+        this._Files.push(file);
+        if (this._Files.length === fileCount) {
+            this._Timer = setInterval(function () { _this.OnTimer(); }, 50);
+            for (var i = 0; i < this._Files.length; i++) {
+                this._TotalBytes += this._Files[i].size;
+            }
+            this._Crt.HideCursor();
+            this.pnlMain = new CrtPanel(this._Crt, undefined, 10, 5, 60, 16, BorderStyle.Single, Crt.WHITE, Crt.BLUE, 'YModem-G Send Status (Hit CTRL+X to abort)', ContentAlignment.TopLeft);
+            this.lblFileCount = new CrtLabel(this._Crt, this.pnlMain, 2, 2, 56, 'Sending file 1 of ' + this._FileCount.toString(), ContentAlignment.Left, Crt.YELLOW, Crt.BLUE);
+            this.lblFileName = new CrtLabel(this._Crt, this.pnlMain, 2, 4, 56, 'File Name: ' + this._Files[0].name, ContentAlignment.Left, Crt.YELLOW, Crt.BLUE);
+            this.lblFileSize = new CrtLabel(this._Crt, this.pnlMain, 2, 5, 56, 'File Size: ' + StringUtils.AddCommas(this._Files[0].size) + ' bytes', ContentAlignment.Left, Crt.YELLOW, Crt.BLUE);
+            this.lblFileSent = new CrtLabel(this._Crt, this.pnlMain, 2, 6, 56, 'File Sent: 0 bytes', ContentAlignment.Left, Crt.YELLOW, Crt.BLUE);
+            this.pbFileSent = new CrtProgressBar(this._Crt, this.pnlMain, 2, 7, 56, ProgressBarStyle.Continuous);
+            this.lblTotalSize = new CrtLabel(this._Crt, this.pnlMain, 2, 9, 56, 'Total Size: ' + StringUtils.AddCommas(this._TotalBytes) + ' bytes', ContentAlignment.Left, Crt.YELLOW, Crt.BLUE);
+            this.lblTotalSent = new CrtLabel(this._Crt, this.pnlMain, 2, 10, 56, 'Total Sent: 0 bytes', ContentAlignment.Left, Crt.YELLOW, Crt.BLUE);
+            this.pbTotalSent = new CrtProgressBar(this._Crt, this.pnlMain, 2, 11, 56, ProgressBarStyle.Continuous);
+            this.pbTotalSent.Maximum = this._TotalBytes;
+            this.lblStatus = new CrtLabel(this._Crt, this.pnlMain, 2, 13, 56, 'Status: Transferring file(s)', ContentAlignment.Left, Crt.WHITE, Crt.BLUE);
+        }
+    };
+    return YModemSend;
+}());
+var YModemSendState;
+(function (YModemSendState) {
+    YModemSendState[YModemSendState["WaitingForHeaderRequest"] = 0] = "WaitingForHeaderRequest";
+    YModemSendState[YModemSendState["WaitingForHeaderAck"] = 1] = "WaitingForHeaderAck";
+    YModemSendState[YModemSendState["WaitingForFileRequest"] = 2] = "WaitingForFileRequest";
+    YModemSendState[YModemSendState["SendingData"] = 3] = "SendingData";
+    YModemSendState[YModemSendState["WaitingForFileAck"] = 4] = "WaitingForFileAck";
+})(YModemSendState || (YModemSendState = {}));
+//# sourceMappingURL=filetransfer.js.map
 var BitmapFont = (function () {
     function BitmapFont() {
     }
@@ -5341,10 +5976,10 @@ var BitmapFont = (function () {
             alert('fTelnet Error: Unable to load RIP bitmap font');
         }
     };
+    BitmapFont.Loaded = false;
+    BitmapFont.Pixels = [];
     return BitmapFont;
 }());
-BitmapFont.Loaded = false;
-BitmapFont.Pixels = [];
 var FillSettings = (function () {
     function FillSettings() {
         this.Colour = 15;
@@ -6876,18 +7511,18 @@ var Graph = (function () {
             return Result;
         }
     };
+    Graph.EGA_PALETTE = [
+        0x000000, 0x0000AA, 0x00AA00, 0x00AAAA, 0xAA0000, 0xAA00AA, 0xAAAA00, 0xAAAAAA,
+        0x000055, 0x0000FF, 0x00AA55, 0x00AAFF, 0xAA0055, 0xAA00FF, 0xAAAA55, 0xAAAAFF,
+        0x005500, 0x0055AA, 0x00FF00, 0x00FFAA, 0xAA5500, 0xAA55AA, 0xAAFF00, 0xAAFFAA,
+        0x005555, 0x0055FF, 0x55FF00, 0x00FFFF, 0xAA5555, 0xAA55FF, 0xAAFF55, 0xAAFFFF,
+        0x550000, 0x5500AA, 0x55AA00, 0x55AAAA, 0xFF0000, 0xFF00AA, 0xFFAA00, 0xFFAAAA,
+        0x550055, 0x5500FF, 0x55AA55, 0x55AAFF, 0xFF0055, 0xFF00FF, 0xFFAA55, 0xFFAAFF,
+        0x555500, 0x5555AA, 0x55FF00, 0x55FFAA, 0xFF5500, 0xFF55AA, 0xFFFF00, 0xFFFFAA,
+        0x555555, 0x5555FF, 0x55FF55, 0x55FFFF, 0xFF5555, 0xFF55FF, 0xFFFF55, 0xFFFFFF
+    ];
     return Graph;
 }());
-Graph.EGA_PALETTE = [
-    0x000000, 0x0000AA, 0x00AA00, 0x00AAAA, 0xAA0000, 0xAA00AA, 0xAAAA00, 0xAAAAAA,
-    0x000055, 0x0000FF, 0x00AA55, 0x00AAFF, 0xAA0055, 0xAA00FF, 0xAAAA55, 0xAAAAFF,
-    0x005500, 0x0055AA, 0x00FF00, 0x00FFAA, 0xAA5500, 0xAA55AA, 0xAAFF00, 0xAAFFAA,
-    0x005555, 0x0055FF, 0x55FF00, 0x00FFFF, 0xAA5555, 0xAA55FF, 0xAAFF55, 0xAAFFFF,
-    0x550000, 0x5500AA, 0x55AA00, 0x55AAAA, 0xFF0000, 0xFF00AA, 0xFFAA00, 0xFFAAAA,
-    0x550055, 0x5500FF, 0x55AA55, 0x55AAFF, 0xFF0055, 0xFF00FF, 0xFFAA55, 0xFFAAFF,
-    0x555500, 0x5555AA, 0x55FF00, 0x55FFAA, 0xFF5500, 0xFF55AA, 0xFFFF00, 0xFFFFAA,
-    0x555555, 0x5555FF, 0x55FF55, 0x55FFFF, 0xFF5555, 0xFF55FF, 0xFFFF55, 0xFFFFFF
-];
 var LineSettings = (function () {
     function LineSettings() {
         this.Style = LineStyle.Solid;
@@ -6910,6 +7545,170 @@ var LineThickness;
     LineThickness[LineThickness["Normal"] = 1] = "Normal";
     LineThickness[LineThickness["Thick"] = 3] = "Thick";
 })(LineThickness || (LineThickness = {}));
+var Rectangle = (function () {
+    function Rectangle(x, y, width, height) {
+        this.height = 0;
+        this.width = 0;
+        this.x = 0;
+        this.y = 0;
+        if (typeof x !== 'undefined') {
+            this.x = x;
+        }
+        if (typeof y !== 'undefined') {
+            this.y = y;
+        }
+        if (typeof width !== 'undefined') {
+            this.width = width;
+        }
+        if (typeof height !== 'undefined') {
+            this.height = height;
+        }
+    }
+    Object.defineProperty(Rectangle.prototype, "bottom", {
+        get: function () {
+            return this.y + this.height;
+        },
+        set: function (value) {
+            this.height = value - this.top;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Rectangle.prototype, "left", {
+        get: function () {
+            return this.x;
+        },
+        set: function (value) {
+            this.width = this.right - value;
+            this.x = value;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Rectangle.prototype, "right", {
+        get: function () {
+            return this.x + this.width;
+        },
+        set: function (value) {
+            this.width = value - this.left;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Rectangle.prototype, "top", {
+        get: function () {
+            return this.y;
+        },
+        set: function (value) {
+            this.height = this.bottom - value;
+            this.y = value;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    return Rectangle;
+}());
+var StrokeFont = (function () {
+    function StrokeFont() {
+    }
+    StrokeFont.Init = function () {
+        var _this = this;
+        for (var Stroke = 0; Stroke < 10; Stroke++) {
+            var Chars = [];
+            for (var Char = 0; Char < 256; Char++) {
+                Chars.push([[0], [0, 0, 0]]);
+            }
+            this.Strokes.push(Chars);
+        }
+        if (document.getElementById('fTelnetScript') !== null) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('get', StringUtils.GetUrl('fonts/RIP-Strokes.json'), true);
+            xhr.onload = function () { _this.OnJsonLoad(xhr); };
+            xhr.send();
+        }
+    };
+    StrokeFont.OnJsonLoad = function (xhr) {
+        var status = xhr.status;
+        if (status === 200) {
+            this.Strokes = JSON.parse(xhr.responseText);
+            this.Loaded = true;
+        }
+        else {
+            alert('fTelnet Error: Unable to load RIP stroke fonts');
+        }
+    };
+    StrokeFont.MOVE = 0;
+    StrokeFont.DRAW = 1;
+    StrokeFont.Heights = [31, 9, 32, 32, 37, 35, 31, 35, 55, 60];
+    StrokeFont.Strokes = [];
+    StrokeFont.Loaded = false;
+    return StrokeFont;
+}());
+var TextJustification;
+(function (TextJustification) {
+    TextJustification[TextJustification["Left"] = 0] = "Left";
+    TextJustification[TextJustification["Center"] = 1] = "Center";
+    TextJustification[TextJustification["Right"] = 2] = "Right";
+    TextJustification[TextJustification["Bottom"] = 0] = "Bottom";
+    TextJustification[TextJustification["Top"] = 2] = "Top";
+})(TextJustification || (TextJustification = {}));
+var TextOrientation;
+(function (TextOrientation) {
+    TextOrientation[TextOrientation["Horizontal"] = 0] = "Horizontal";
+    TextOrientation[TextOrientation["Vertical"] = 1] = "Vertical";
+})(TextOrientation || (TextOrientation = {}));
+var TextSettings = (function () {
+    function TextSettings() {
+        this.Direction = TextOrientation.Horizontal;
+        this.Font = 0;
+        this.HorizontalAlign = TextJustification.Left;
+        this.Size = 1;
+        this.VerticalAlign = TextJustification.Top;
+        this.SetStrokeScale();
+    }
+    TextSettings.prototype.SetStrokeScale = function () {
+        this.StrokeScaleX = TextSettings.STROKE_SCALES[this.Font][this.Size][0] / TextSettings.STROKE_SCALES[this.Font][4][0];
+        this.StrokeScaleY = TextSettings.STROKE_SCALES[this.Font][this.Size][1] / TextSettings.STROKE_SCALES[this.Font][4][1];
+    };
+    TextSettings.STROKE_SCALES = [
+        [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
+        [[0, 0], [13, 18], [14, 20], [16, 23], [22, 31], [29, 41], [36, 51], [44, 62], [55, 77], [66, 93], [88, 124]],
+        [[0, 0], [3, 5], [4, 6], [4, 6], [6, 9], [8, 12], [10, 15], [12, 18], [15, 22], [18, 27], [24, 36]],
+        [[0, 0], [11, 19], [12, 21], [14, 24], [19, 32], [25, 42], [31, 53], [38, 64], [47, 80], [57, 96], [76, 128]],
+        [[0, 0], [13, 19], [14, 21], [16, 24], [22, 32], [29, 42], [36, 53], [44, 64], [55, 80], [66, 96], [88, 128]],
+        [[0, 0], [11, 19], [12, 21], [14, 24], [19, 32], [25, 42], [31, 53], [38, 64], [47, 80], [57, 96], [76, 128]],
+        [[0, 0], [11, 19], [12, 21], [14, 24], [19, 32], [25, 42], [31, 53], [38, 64], [47, 80], [57, 96], [76, 128]],
+        [[0, 0], [13, 18], [14, 20], [16, 23], [22, 31], [29, 41], [36, 51], [44, 62], [55, 77], [66, 93], [88, 124]],
+        [[0, 0], [11, 19], [12, 21], [14, 24], [19, 32], [25, 42], [31, 53], [38, 64], [47, 80], [57, 96], [76, 128]],
+        [[0, 0], [11, 19], [12, 21], [14, 24], [19, 32], [25, 42], [31, 53], [38, 64], [47, 80], [57, 96], [76, 128]],
+        [[0, 0], [11, 19], [12, 21], [14, 24], [19, 32], [25, 42], [31, 53], [38, 64], [47, 80], [57, 96], [76, 128]]
+    ];
+    return TextSettings;
+}());
+var ViewPortSettings = (function () {
+    function ViewPortSettings() {
+        this.x1 = 0;
+        this.y1 = 0;
+        this.x2 = 639;
+        this.y2 = 349;
+        this.Clip = true;
+        this.FromBottom = 0;
+        this.FromLeft = 0;
+        this.FromRight = 0;
+        this.FromTop = 0;
+        this.FullScreen = true;
+    }
+    return ViewPortSettings;
+}());
+var WriteMode;
+(function (WriteMode) {
+    WriteMode[WriteMode["Normal"] = 0] = "Normal";
+    WriteMode[WriteMode["Copy"] = 0] = "Copy";
+    WriteMode[WriteMode["XOR"] = 1] = "XOR";
+    WriteMode[WriteMode["Or"] = 2] = "Or";
+    WriteMode[WriteMode["And"] = 3] = "And";
+    WriteMode[WriteMode["Not"] = 4] = "Not";
+})(WriteMode || (WriteMode = {}));
 var ButtonStyle = (function () {
     function ButtonStyle() {
         this.width = 0;
@@ -8484,1568 +9283,7 @@ var RIPParserState;
     RIPParserState[RIPParserState["GotSubLevel"] = 4] = "GotSubLevel";
     RIPParserState[RIPParserState["GotCommand"] = 5] = "GotCommand";
 })(RIPParserState || (RIPParserState = {}));
-var StrokeFont = (function () {
-    function StrokeFont() {
-    }
-    StrokeFont.Init = function () {
-        var _this = this;
-        for (var Stroke = 0; Stroke < 10; Stroke++) {
-            var Chars = [];
-            for (var Char = 0; Char < 256; Char++) {
-                Chars.push([[0], [0, 0, 0]]);
-            }
-            this.Strokes.push(Chars);
-        }
-        if (document.getElementById('fTelnetScript') !== null) {
-            var xhr = new XMLHttpRequest();
-            xhr.open('get', StringUtils.GetUrl('fonts/RIP-Strokes.json'), true);
-            xhr.onload = function () { _this.OnJsonLoad(xhr); };
-            xhr.send();
-        }
-    };
-    StrokeFont.OnJsonLoad = function (xhr) {
-        var status = xhr.status;
-        if (status === 200) {
-            this.Strokes = JSON.parse(xhr.responseText);
-            this.Loaded = true;
-        }
-        else {
-            alert('fTelnet Error: Unable to load RIP stroke fonts');
-        }
-    };
-    return StrokeFont;
-}());
-StrokeFont.MOVE = 0;
-StrokeFont.DRAW = 1;
-StrokeFont.Heights = [31, 9, 32, 32, 37, 35, 31, 35, 55, 60];
-StrokeFont.Strokes = [];
-StrokeFont.Loaded = false;
-var TextJustification;
-(function (TextJustification) {
-    TextJustification[TextJustification["Left"] = 0] = "Left";
-    TextJustification[TextJustification["Center"] = 1] = "Center";
-    TextJustification[TextJustification["Right"] = 2] = "Right";
-    TextJustification[TextJustification["Bottom"] = 0] = "Bottom";
-    TextJustification[TextJustification["Top"] = 2] = "Top";
-})(TextJustification || (TextJustification = {}));
-var TextOrientation;
-(function (TextOrientation) {
-    TextOrientation[TextOrientation["Horizontal"] = 0] = "Horizontal";
-    TextOrientation[TextOrientation["Vertical"] = 1] = "Vertical";
-})(TextOrientation || (TextOrientation = {}));
-var TextSettings = (function () {
-    function TextSettings() {
-        this.Direction = TextOrientation.Horizontal;
-        this.Font = 0;
-        this.HorizontalAlign = TextJustification.Left;
-        this.Size = 1;
-        this.VerticalAlign = TextJustification.Top;
-        this.SetStrokeScale();
-    }
-    TextSettings.prototype.SetStrokeScale = function () {
-        this.StrokeScaleX = TextSettings.STROKE_SCALES[this.Font][this.Size][0] / TextSettings.STROKE_SCALES[this.Font][4][0];
-        this.StrokeScaleY = TextSettings.STROKE_SCALES[this.Font][this.Size][1] / TextSettings.STROKE_SCALES[this.Font][4][1];
-    };
-    return TextSettings;
-}());
-TextSettings.STROKE_SCALES = [
-    [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-    [[0, 0], [13, 18], [14, 20], [16, 23], [22, 31], [29, 41], [36, 51], [44, 62], [55, 77], [66, 93], [88, 124]],
-    [[0, 0], [3, 5], [4, 6], [4, 6], [6, 9], [8, 12], [10, 15], [12, 18], [15, 22], [18, 27], [24, 36]],
-    [[0, 0], [11, 19], [12, 21], [14, 24], [19, 32], [25, 42], [31, 53], [38, 64], [47, 80], [57, 96], [76, 128]],
-    [[0, 0], [13, 19], [14, 21], [16, 24], [22, 32], [29, 42], [36, 53], [44, 64], [55, 80], [66, 96], [88, 128]],
-    [[0, 0], [11, 19], [12, 21], [14, 24], [19, 32], [25, 42], [31, 53], [38, 64], [47, 80], [57, 96], [76, 128]],
-    [[0, 0], [11, 19], [12, 21], [14, 24], [19, 32], [25, 42], [31, 53], [38, 64], [47, 80], [57, 96], [76, 128]],
-    [[0, 0], [13, 18], [14, 20], [16, 23], [22, 31], [29, 41], [36, 51], [44, 62], [55, 77], [66, 93], [88, 124]],
-    [[0, 0], [11, 19], [12, 21], [14, 24], [19, 32], [25, 42], [31, 53], [38, 64], [47, 80], [57, 96], [76, 128]],
-    [[0, 0], [11, 19], [12, 21], [14, 24], [19, 32], [25, 42], [31, 53], [38, 64], [47, 80], [57, 96], [76, 128]],
-    [[0, 0], [11, 19], [12, 21], [14, 24], [19, 32], [25, 42], [31, 53], [38, 64], [47, 80], [57, 96], [76, 128]]
-];
-var ViewPortSettings = (function () {
-    function ViewPortSettings() {
-        this.x1 = 0;
-        this.y1 = 0;
-        this.x2 = 639;
-        this.y2 = 349;
-        this.Clip = true;
-        this.FromBottom = 0;
-        this.FromLeft = 0;
-        this.FromRight = 0;
-        this.FromTop = 0;
-        this.FullScreen = true;
-    }
-    return ViewPortSettings;
-}());
-var WriteMode;
-(function (WriteMode) {
-    WriteMode[WriteMode["Normal"] = 0] = "Normal";
-    WriteMode[WriteMode["Copy"] = 0] = "Copy";
-    WriteMode[WriteMode["XOR"] = 1] = "XOR";
-    WriteMode[WriteMode["Or"] = 2] = "Or";
-    WriteMode[WriteMode["And"] = 3] = "And";
-    WriteMode[WriteMode["Not"] = 4] = "Not";
-})(WriteMode || (WriteMode = {}));
-var CRC = (function () {
-    function CRC() {
-    }
-    CRC.Calculate16 = function (bytes) {
-        var CRC = 0;
-        var OldPosition = bytes.position;
-        bytes.position = 0;
-        while (bytes.bytesAvailable > 0) {
-            CRC = this.UpdateCrc(bytes.readUnsignedByte(), CRC);
-        }
-        CRC = this.UpdateCrc(0, CRC);
-        CRC = this.UpdateCrc(0, CRC);
-        bytes.position = OldPosition;
-        return CRC;
-    };
-    CRC.UpdateCrc = function (curByte, curCrc) {
-        return (this.CRC_TABLE[(curCrc >> 8) & 0x00FF] ^ (curCrc << 8) ^ curByte) & 0xFFFF;
-    };
-    return CRC;
-}());
-CRC.CRC_TABLE = [
-    0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
-    0x8108, 0x9129, 0xa14a, 0xb16b, 0xc18c, 0xd1ad, 0xe1ce, 0xf1ef,
-    0x1231, 0x0210, 0x3273, 0x2252, 0x52b5, 0x4294, 0x72f7, 0x62d6,
-    0x9339, 0x8318, 0xb37b, 0xa35a, 0xd3bd, 0xc39c, 0xf3ff, 0xe3de,
-    0x2462, 0x3443, 0x0420, 0x1401, 0x64e6, 0x74c7, 0x44a4, 0x5485,
-    0xa56a, 0xb54b, 0x8528, 0x9509, 0xe5ee, 0xf5cf, 0xc5ac, 0xd58d,
-    0x3653, 0x2672, 0x1611, 0x0630, 0x76d7, 0x66f6, 0x5695, 0x46b4,
-    0xb75b, 0xa77a, 0x9719, 0x8738, 0xf7df, 0xe7fe, 0xd79d, 0xc7bc,
-    0x48c4, 0x58e5, 0x6886, 0x78a7, 0x0840, 0x1861, 0x2802, 0x3823,
-    0xc9cc, 0xd9ed, 0xe98e, 0xf9af, 0x8948, 0x9969, 0xa90a, 0xb92b,
-    0x5af5, 0x4ad4, 0x7ab7, 0x6a96, 0x1a71, 0x0a50, 0x3a33, 0x2a12,
-    0xdbfd, 0xcbdc, 0xfbbf, 0xeb9e, 0x9b79, 0x8b58, 0xbb3b, 0xab1a,
-    0x6ca6, 0x7c87, 0x4ce4, 0x5cc5, 0x2c22, 0x3c03, 0x0c60, 0x1c41,
-    0xedae, 0xfd8f, 0xcdec, 0xddcd, 0xad2a, 0xbd0b, 0x8d68, 0x9d49,
-    0x7e97, 0x6eb6, 0x5ed5, 0x4ef4, 0x3e13, 0x2e32, 0x1e51, 0x0e70,
-    0xff9f, 0xefbe, 0xdfdd, 0xcffc, 0xbf1b, 0xaf3a, 0x9f59, 0x8f78,
-    0x9188, 0x81a9, 0xb1ca, 0xa1eb, 0xd10c, 0xc12d, 0xf14e, 0xe16f,
-    0x1080, 0x00a1, 0x30c2, 0x20e3, 0x5004, 0x4025, 0x7046, 0x6067,
-    0x83b9, 0x9398, 0xa3fb, 0xb3da, 0xc33d, 0xd31c, 0xe37f, 0xf35e,
-    0x02b1, 0x1290, 0x22f3, 0x32d2, 0x4235, 0x5214, 0x6277, 0x7256,
-    0xb5ea, 0xa5cb, 0x95a8, 0x8589, 0xf56e, 0xe54f, 0xd52c, 0xc50d,
-    0x34e2, 0x24c3, 0x14a0, 0x0481, 0x7466, 0x6447, 0x5424, 0x4405,
-    0xa7db, 0xb7fa, 0x8799, 0x97b8, 0xe75f, 0xf77e, 0xc71d, 0xd73c,
-    0x26d3, 0x36f2, 0x0691, 0x16b0, 0x6657, 0x7676, 0x4615, 0x5634,
-    0xd94c, 0xc96d, 0xf90e, 0xe92f, 0x99c8, 0x89e9, 0xb98a, 0xa9ab,
-    0x5844, 0x4865, 0x7806, 0x6827, 0x18c0, 0x08e1, 0x3882, 0x28a3,
-    0xcb7d, 0xdb5c, 0xeb3f, 0xfb1e, 0x8bf9, 0x9bd8, 0xabbb, 0xbb9a,
-    0x4a75, 0x5a54, 0x6a37, 0x7a16, 0x0af1, 0x1ad0, 0x2ab3, 0x3a92,
-    0xfd2e, 0xed0f, 0xdd6c, 0xcd4d, 0xbdaa, 0xad8b, 0x9de8, 0x8dc9,
-    0x7c26, 0x6c07, 0x5c64, 0x4c45, 0x3ca2, 0x2c83, 0x1ce0, 0x0cc1,
-    0xef1f, 0xff3e, 0xcf5d, 0xdf7c, 0xaf9b, 0xbfba, 0x8fd9, 0x9ff8,
-    0x6e17, 0x7e36, 0x4e55, 0x5e74, 0x2e93, 0x3eb2, 0x0ed1, 0x1ef0
-];
-var FileRecord = (function () {
-    function FileRecord(name, size) {
-        this._Data = new ByteArray();
-        this._Name = '';
-        this._Size = 0;
-        this._Name = name;
-        this._Size = size;
-    }
-    Object.defineProperty(FileRecord.prototype, "data", {
-        get: function () {
-            return this._Data;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(FileRecord.prototype, "name", {
-        get: function () {
-            return this._Name;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(FileRecord.prototype, "size", {
-        get: function () {
-            return this._Size;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return FileRecord;
-}());
-var YModemReceive = (function () {
-    function YModemReceive(crt, connection) {
-        this.ontransfercomplete = new TypedEvent();
-        this.SOH = 0x01;
-        this.STX = 0x02;
-        this.EOT = 0x04;
-        this.ACK = 0x06;
-        this.CAN = 0x18;
-        this.CAPG = 'G'.charCodeAt(0);
-        this._ExpectingHeader = true;
-        this._Files = [];
-        this._LastGTime = 0;
-        this._NextByte = 0;
-        this._ShouldSendG = true;
-        this._TotalBytesReceived = 0;
-        this._Crt = crt;
-        this._Connection = connection;
-    }
-    YModemReceive.prototype.Cancel = function (reason) {
-        try {
-            this._Connection.writeByte(this.CAN);
-            this._Connection.writeByte(this.CAN);
-            this._Connection.writeByte(this.CAN);
-            this._Connection.writeByte(this.CAN);
-            this._Connection.writeByte(this.CAN);
-            this._Connection.writeString('\b\b\b\b\b     \b\b\b\b\b');
-        }
-        catch (ioe1) {
-            this.HandleIOError(ioe1);
-            return;
-        }
-        try {
-            this._Connection.readString();
-        }
-        catch (ioe2) {
-            this.HandleIOError(ioe2);
-            return;
-        }
-        this.CleanUp('Cancelling (' + reason + ')');
-    };
-    YModemReceive.prototype.CleanUp = function (message) {
-        var _this = this;
-        clearInterval(this._Timer);
-        this.lblStatus.Text = 'Status: ' + message;
-        setTimeout(function () { _this.Dispatch(); }, 3000);
-    };
-    YModemReceive.prototype.Dispatch = function () {
-        this.pnlMain.Hide();
-        this._Crt.ShowCursor();
-        this.ontransfercomplete.trigger();
-    };
-    YModemReceive.prototype.Download = function () {
-        var _this = this;
-        this._Timer = setInterval(function () { _this.OnTimer(); }, 50);
-        this._Crt.HideCursor();
-        this.pnlMain = new CrtPanel(this._Crt, undefined, 10, 5, 60, 14, BorderStyle.Single, Crt.WHITE, Crt.BLUE, 'YModem-G Receive Status (Hit CTRL+X to abort)', ContentAlignment.TopLeft);
-        this.lblFileCount = new CrtLabel(this._Crt, this.pnlMain, 2, 2, 56, 'Receiving file 1', ContentAlignment.Left, Crt.YELLOW, Crt.BLUE);
-        this.lblFileName = new CrtLabel(this._Crt, this.pnlMain, 2, 4, 56, 'File Name: ', ContentAlignment.Left, Crt.YELLOW, Crt.BLUE);
-        this.lblFileSize = new CrtLabel(this._Crt, this.pnlMain, 2, 5, 56, 'File Size: ', ContentAlignment.Left, Crt.YELLOW, Crt.BLUE);
-        this.lblFileReceived = new CrtLabel(this._Crt, this.pnlMain, 2, 6, 56, 'File Recv: ', ContentAlignment.Left, Crt.YELLOW, Crt.BLUE);
-        this.pbFileReceived = new CrtProgressBar(this._Crt, this.pnlMain, 2, 7, 56, ProgressBarStyle.Continuous);
-        this.lblTotalReceived = new CrtLabel(this._Crt, this.pnlMain, 2, 9, 56, 'Total Recv: ', ContentAlignment.Left, Crt.YELLOW, Crt.BLUE);
-        this.lblStatus = new CrtLabel(this._Crt, this.pnlMain, 2, 11, 56, 'Status: Transferring file(s)', ContentAlignment.Left, Crt.WHITE, Crt.BLUE);
-    };
-    YModemReceive.prototype.FileAt = function (index) {
-        return this._Files[index];
-    };
-    Object.defineProperty(YModemReceive.prototype, "FileCount", {
-        get: function () {
-            return this._Files.length;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    YModemReceive.prototype.HandleIOError = function (ioe) {
-        console.log('I/O Error: ' + ioe);
-        if (this._Connection.connected) {
-            this.CleanUp('Unhandled I/O error');
-        }
-        else {
-            this.CleanUp('Connection to server lost');
-        }
-    };
-    YModemReceive.prototype.OnTimer = function () {
-        while (this._Crt.KeyPressed()) {
-            var KPE = this._Crt.ReadKey();
-            if ((typeof KPE !== 'undefined') && (KPE.keyString.length > 0) && (KPE.keyString.charCodeAt(0) === this.CAN)) {
-                this.Cancel('User requested abort');
-            }
-        }
-        while (true) {
-            if (this._NextByte === 0) {
-                if (this._Connection.bytesAvailable === 0) {
-                    if (this._ShouldSendG && ((new Date()).getTime() - this._LastGTime > 3000)) {
-                        try {
-                            this._Connection.writeByte(this.CAPG);
-                            this._Connection.flush();
-                        }
-                        catch (ioe1) {
-                            this.HandleIOError(ioe1);
-                            return;
-                        }
-                        this._LastGTime = new Date().getTime();
-                    }
-                    return;
-                }
-                else {
-                    try {
-                        this._NextByte = this._Connection.readUnsignedByte();
-                    }
-                    catch (ioe2) {
-                        this.HandleIOError(ioe2);
-                        return;
-                    }
-                }
-            }
-            switch (this._NextByte) {
-                case this.CAN:
-                    this.CleanUp('Sender requested abort');
-                    break;
-                case this.SOH:
-                case this.STX:
-                    this._ShouldSendG = false;
-                    var BlockSize = (this._NextByte === this.STX) ? 1024 : 128;
-                    if (this._Connection.bytesAvailable < (1 + 1 + BlockSize + 1 + 1)) {
-                        return;
-                    }
-                    this._NextByte = 0;
-                    var InBlock = this._Connection.readUnsignedByte();
-                    var InBlockInverse = this._Connection.readUnsignedByte();
-                    if (InBlockInverse !== (255 - InBlock)) {
-                        this.Cancel('Bad block #: ' + InBlockInverse.toString() + ' !== 255-' + InBlock.toString());
-                        return;
-                    }
-                    var Packet = new ByteArray();
-                    this._Connection.readBytes(Packet, 0, BlockSize);
-                    var InCRC = this._Connection.readUnsignedShort();
-                    var OurCRC = CRC.Calculate16(Packet);
-                    if (InCRC !== OurCRC) {
-                        this.Cancel('Bad CRC: ' + InCRC.toString() + ' !== ' + OurCRC.toString());
-                        return;
-                    }
-                    if (this._ExpectingHeader) {
-                        if (InBlock !== 0) {
-                            this.Cancel('Expecting header got block ' + InBlock.toString());
-                            return;
-                        }
-                        this._ExpectingHeader = false;
-                        var FileName = '';
-                        var B = Packet.readUnsignedByte();
-                        while ((B !== 0) && (Packet.bytesAvailable > 0)) {
-                            FileName += String.fromCharCode(B);
-                            B = Packet.readUnsignedByte();
-                        }
-                        var Temp = '';
-                        var FileSize = 0;
-                        B = Packet.readUnsignedByte();
-                        while ((B >= 48) && (B <= 57) && (Packet.bytesAvailable > 0)) {
-                            Temp += String.fromCharCode(B);
-                            B = Packet.readUnsignedByte();
-                        }
-                        FileSize = parseInt(Temp, 10);
-                        if (FileName.length === 0) {
-                            this.CleanUp('File(s) successfully received!');
-                            return;
-                        }
-                        if (isNaN(FileSize) || (FileSize === 0)) {
-                            this.Cancel('File Size missing from header block');
-                            return;
-                        }
-                        this._File = new FileRecord(FileName, FileSize);
-                        this.lblFileCount.Text = 'Receiving file ' + (this._Files.length + 1).toString();
-                        this.lblFileName.Text = 'File Name: ' + FileName;
-                        this.lblFileSize.Text = 'File Size: ' + StringUtils.AddCommas(FileSize) + ' bytes';
-                        this.lblFileReceived.Text = 'File Recv: 0 bytes';
-                        this.pbFileReceived.Value = 0;
-                        this.pbFileReceived.Maximum = FileSize;
-                        try {
-                            this._Connection.writeByte(this.CAPG);
-                            this._Connection.flush();
-                        }
-                        catch (ioe3) {
-                            this.HandleIOError(ioe3);
-                            return;
-                        }
-                    }
-                    else {
-                        var BytesToWrite = Math.min(BlockSize, this._File.size - this._File.data.length);
-                        this._File.data.writeBytes(Packet, 0, BytesToWrite);
-                        this._TotalBytesReceived += BytesToWrite;
-                        this.lblFileReceived.Text = 'File Recv: ' + StringUtils.AddCommas(this._File.data.length) + ' bytes';
-                        this.pbFileReceived.Value = this._File.data.length;
-                        this.lblTotalReceived.Text = 'Total Recv: ' + StringUtils.AddCommas(this._TotalBytesReceived) + ' bytes';
-                    }
-                    break;
-                case this.EOT:
-                    this._ShouldSendG = true;
-                    try {
-                        this._Connection.writeByte(this.ACK);
-                        this._Connection.writeByte(this.CAPG);
-                        this._Connection.flush();
-                    }
-                    catch (ioe4) {
-                        this.HandleIOError(ioe4);
-                        return;
-                    }
-                    this._NextByte = 0;
-                    this._ExpectingHeader = true;
-                    this._Files.push(this._File);
-                    this.SaveFile(this._Files.length - 1);
-                    break;
-                default:
-                    this.Cancel('Unexpected byte: ' + this._NextByte.toString());
-                    return;
-            }
-        }
-    };
-    YModemReceive.prototype.SaveFile = function (index) {
-        var ByteString = this._Files[index].data.toString();
-        var Buffer = new ArrayBuffer(ByteString.length);
-        var View = new DataView(Buffer);
-        for (var i = 0; i < ByteString.length; i++) {
-            View.setUint8(i, ByteString.charCodeAt(i));
-        }
-        var FileBlob = new Blob([Buffer], { type: 'application/octet-binary' });
-        saveAs(FileBlob, this._Files[index].name);
-    };
-    return YModemReceive;
-}());
-var YModemSend = (function () {
-    function YModemSend(crt, connection) {
-        this.ontransfercomplete = new TypedEvent();
-        this.SOH = 0x01;
-        this.STX = 0x02;
-        this.EOT = 0x04;
-        this.ACK = 0x06;
-        this.NAK = 0x15;
-        this.CAN = 0x18;
-        this.SUB = 0x1A;
-        this.CAPG = 'G'.charCodeAt(0);
-        this._Block = 0;
-        this._EOTCount = 0;
-        this._FileBytesSent = 0;
-        this._FileCount = 0;
-        this._Files = [];
-        this._State = YModemSendState.WaitingForHeaderRequest;
-        this._TotalBytes = 0;
-        this._TotalBytesSent = 0;
-        this._Crt = crt;
-        this._Connection = connection;
-    }
-    YModemSend.prototype.Cancel = function (reason) {
-        try {
-            this._Connection.writeByte(this.CAN);
-            this._Connection.writeByte(this.CAN);
-            this._Connection.writeByte(this.CAN);
-            this._Connection.writeByte(this.CAN);
-            this._Connection.writeByte(this.CAN);
-            this._Connection.writeString('\b\b\b\b\b     \b\b\b\b\b');
-        }
-        catch (ioe1) {
-            this.HandleIOError(ioe1);
-            return;
-        }
-        try {
-            this._Connection.readString();
-        }
-        catch (ioe2) {
-            this.HandleIOError(ioe2);
-            return;
-        }
-        this.CleanUp('Cancelling (' + reason + ')');
-    };
-    YModemSend.prototype.CleanUp = function (message) {
-        var _this = this;
-        clearInterval(this._Timer);
-        this.lblStatus.Text = 'Status: ' + message;
-        setTimeout(function () { _this.Dispatch(); }, 3000);
-    };
-    YModemSend.prototype.Dispatch = function () {
-        this.pnlMain.Hide();
-        this._Crt.ShowCursor();
-        this.ontransfercomplete.trigger();
-    };
-    YModemSend.prototype.HandleIOError = function (ioe) {
-        console.log('I/O Error: ' + ioe);
-        if (this._Connection.connected) {
-            this.CleanUp('Unhandled I/O error');
-        }
-        else {
-            this.CleanUp('Connection to server lost');
-        }
-    };
-    YModemSend.prototype.OnTimer = function () {
-        while (this._Crt.KeyPressed()) {
-            var KPE = this._Crt.ReadKey();
-            if ((typeof KPE !== 'undefined') && (KPE.keyString.length > 0) && (KPE.keyString.charCodeAt(0) === this.CAN)) {
-                this.Cancel('User requested abort');
-            }
-        }
-        if ((this._State !== YModemSendState.SendingData) && (this._Connection.bytesAvailable === 0)) {
-            return;
-        }
-        var B = 0;
-        switch (this._State) {
-            case YModemSendState.WaitingForHeaderRequest:
-                try {
-                    B = this._Connection.readUnsignedByte();
-                }
-                catch (ioe1) {
-                    this.HandleIOError(ioe1);
-                    return;
-                }
-                if (B !== this.CAPG) {
-                    this.Cancel('Expecting G got ' + B.toString() + ' (State=' + this._State + ')');
-                    return;
-                }
-                try {
-                    this._Connection.readString();
-                }
-                catch (ioe2) {
-                    this.HandleIOError(ioe2);
-                    return;
-                }
-                var NextFile = this._Files.shift();
-                if (typeof NextFile === 'undefined') {
-                    this.SendEmptyHeaderBlock();
-                    this.CleanUp('File(s) successfully sent!');
-                    return;
-                }
-                this._File = NextFile;
-                this.lblFileCount.Text = 'Sending file ' + (this._FileCount - this._Files.length).toString() + ' of ' + this._FileCount.toString();
-                this.lblFileName.Text = 'File Name: ' + this._File.name;
-                this.lblFileSize.Text = 'File Size: ' + StringUtils.AddCommas(this._File.size) + ' bytes';
-                this.lblFileSent.Text = 'File Sent: 0 bytes';
-                this.pbFileSent.Value = 0;
-                this.pbFileSent.Maximum = this._File.size;
-                this.SendHeaderBlock();
-                this._Block = 1;
-                this._EOTCount = 0;
-                this._FileBytesSent = 0;
-                this._State = YModemSendState.WaitingForHeaderAck;
-                return;
-            case YModemSendState.WaitingForHeaderAck:
-                try {
-                    B = this._Connection.readUnsignedByte();
-                }
-                catch (ioe3) {
-                    this.HandleIOError(ioe3);
-                    return;
-                }
-                if ((B !== this.ACK) && (B !== this.CAPG)) {
-                    this.Cancel('Expecting ACK/G got ' + B.toString() + ' (State=' + this._State + ')');
-                    return;
-                }
-                if (B === this.ACK) {
-                    this._State = YModemSendState.WaitingForFileRequest;
-                }
-                else if (B === this.CAPG) {
-                    this._State = YModemSendState.SendingData;
-                }
-                return;
-            case YModemSendState.WaitingForFileRequest:
-                try {
-                    B = this._Connection.readUnsignedByte();
-                }
-                catch (ioe4) {
-                    this.HandleIOError(ioe4);
-                    return;
-                }
-                if (B !== this.CAPG) {
-                    this.Cancel('Expecting G got ' + B.toString() + ' (State=' + this._State + ')');
-                    return;
-                }
-                this._State = YModemSendState.SendingData;
-                return;
-            case YModemSendState.SendingData:
-                if (this.SendDataBlocks(16)) {
-                    this._State = YModemSendState.WaitingForFileAck;
-                }
-                return;
-            case YModemSendState.WaitingForFileAck:
-                try {
-                    B = this._Connection.readUnsignedByte();
-                }
-                catch (ioe5) {
-                    this.HandleIOError(ioe5);
-                    return;
-                }
-                if ((B !== this.ACK) && (B !== this.NAK)) {
-                    this.Cancel('Expecting (N)ACK got ' + B.toString() + ' (State=' + this._State + ')');
-                    return;
-                }
-                if (B === this.ACK) {
-                    this._State = YModemSendState.WaitingForHeaderRequest;
-                }
-                else if (B === this.NAK) {
-                    this.SendEOT();
-                }
-                return;
-        }
-    };
-    YModemSend.prototype.SendDataBlocks = function (blocks) {
-        for (var loop = 0; loop < blocks; loop++) {
-            var BytesToRead = Math.min(1024, this._File.data.bytesAvailable);
-            if (BytesToRead === 0) {
-                this.SendEOT();
-                return true;
-            }
-            else {
-                var Packet = new ByteArray();
-                this._File.data.readBytes(Packet, 0, BytesToRead);
-                if (Packet.length < 1024) {
-                    Packet.position = Packet.length;
-                    while (Packet.length < 1024) {
-                        Packet.writeByte(this.SUB);
-                    }
-                    Packet.position = 0;
-                }
-                try {
-                    this._Connection.writeByte(this.STX);
-                    this._Connection.writeByte(this._Block % 256);
-                    this._Connection.writeByte(255 - (this._Block % 256));
-                    this._Connection.writeBytes(Packet);
-                    this._Connection.writeShort(CRC.Calculate16(Packet));
-                    this._Connection.flush();
-                }
-                catch (ioe) {
-                    this.HandleIOError(ioe);
-                    return false;
-                }
-                this._Block++;
-                this._FileBytesSent += BytesToRead;
-                this._TotalBytesSent += BytesToRead;
-                this.lblFileSent.Text = 'File Sent: ' + StringUtils.AddCommas(this._FileBytesSent) + ' bytes';
-                this.pbFileSent.StepBy(BytesToRead);
-                this.lblTotalSent.Text = 'Total Sent: ' + StringUtils.AddCommas(this._TotalBytesSent) + ' bytes';
-                this.pbTotalSent.StepBy(BytesToRead);
-            }
-        }
-        return false;
-    };
-    YModemSend.prototype.SendEmptyHeaderBlock = function () {
-        var Packet = new ByteArray();
-        for (var i = 0; i < 128; i++) {
-            Packet.writeByte(0);
-        }
-        try {
-            this._Connection.writeByte(this.SOH);
-            this._Connection.writeByte(0);
-            this._Connection.writeByte(255);
-            this._Connection.writeBytes(Packet);
-            this._Connection.writeShort(CRC.Calculate16(Packet));
-            this._Connection.flush();
-        }
-        catch (ioe) {
-            this.HandleIOError(ioe);
-            return;
-        }
-    };
-    YModemSend.prototype.SendEOT = function () {
-        try {
-            this._Connection.writeByte(this.EOT);
-            this._Connection.flush();
-        }
-        catch (ioe) {
-            this.HandleIOError(ioe);
-            return;
-        }
-        this._EOTCount++;
-    };
-    YModemSend.prototype.SendHeaderBlock = function () {
-        var i = 0;
-        var Packet = new ByteArray();
-        for (i = 0; i < this._File.name.length; i++) {
-            Packet.writeByte(this._File.name.charCodeAt(i));
-        }
-        Packet.writeByte(0);
-        var Size = this._File.size.toString();
-        for (i = 0; i < Size.length; i++) {
-            Packet.writeByte(Size.charCodeAt(i));
-        }
-        if (Packet.length < 128) {
-            while (Packet.length < 128) {
-                Packet.writeByte(0);
-            }
-        }
-        else if (Packet.length === 128) {
-            i = 0;
-        }
-        else if (Packet.length < 1024) {
-            while (Packet.length < 1024) {
-                Packet.writeByte(0);
-            }
-        }
-        else if (Packet.length === 1024) {
-            i = 0;
-        }
-        else {
-            this.Cancel('Header packet exceeded 1024 bytes!');
-            return;
-        }
-        try {
-            this._Connection.writeByte(Packet.length === 128 ? this.SOH : this.STX);
-            this._Connection.writeByte(0);
-            this._Connection.writeByte(255);
-            this._Connection.writeBytes(Packet);
-            this._Connection.writeShort(CRC.Calculate16(Packet));
-            this._Connection.flush();
-        }
-        catch (ioe) {
-            this.HandleIOError(ioe);
-            return;
-        }
-    };
-    YModemSend.prototype.Upload = function (file, fileCount) {
-        var _this = this;
-        this._FileCount = fileCount;
-        this._Files.push(file);
-        if (this._Files.length === fileCount) {
-            this._Timer = setInterval(function () { _this.OnTimer(); }, 50);
-            for (var i = 0; i < this._Files.length; i++) {
-                this._TotalBytes += this._Files[i].size;
-            }
-            this._Crt.HideCursor();
-            this.pnlMain = new CrtPanel(this._Crt, undefined, 10, 5, 60, 16, BorderStyle.Single, Crt.WHITE, Crt.BLUE, 'YModem-G Send Status (Hit CTRL+X to abort)', ContentAlignment.TopLeft);
-            this.lblFileCount = new CrtLabel(this._Crt, this.pnlMain, 2, 2, 56, 'Sending file 1 of ' + this._FileCount.toString(), ContentAlignment.Left, Crt.YELLOW, Crt.BLUE);
-            this.lblFileName = new CrtLabel(this._Crt, this.pnlMain, 2, 4, 56, 'File Name: ' + this._Files[0].name, ContentAlignment.Left, Crt.YELLOW, Crt.BLUE);
-            this.lblFileSize = new CrtLabel(this._Crt, this.pnlMain, 2, 5, 56, 'File Size: ' + StringUtils.AddCommas(this._Files[0].size) + ' bytes', ContentAlignment.Left, Crt.YELLOW, Crt.BLUE);
-            this.lblFileSent = new CrtLabel(this._Crt, this.pnlMain, 2, 6, 56, 'File Sent: 0 bytes', ContentAlignment.Left, Crt.YELLOW, Crt.BLUE);
-            this.pbFileSent = new CrtProgressBar(this._Crt, this.pnlMain, 2, 7, 56, ProgressBarStyle.Continuous);
-            this.lblTotalSize = new CrtLabel(this._Crt, this.pnlMain, 2, 9, 56, 'Total Size: ' + StringUtils.AddCommas(this._TotalBytes) + ' bytes', ContentAlignment.Left, Crt.YELLOW, Crt.BLUE);
-            this.lblTotalSent = new CrtLabel(this._Crt, this.pnlMain, 2, 10, 56, 'Total Sent: 0 bytes', ContentAlignment.Left, Crt.YELLOW, Crt.BLUE);
-            this.pbTotalSent = new CrtProgressBar(this._Crt, this.pnlMain, 2, 11, 56, ProgressBarStyle.Continuous);
-            this.pbTotalSent.Maximum = this._TotalBytes;
-            this.lblStatus = new CrtLabel(this._Crt, this.pnlMain, 2, 13, 56, 'Status: Transferring file(s)', ContentAlignment.Left, Crt.WHITE, Crt.BLUE);
-        }
-    };
-    return YModemSend;
-}());
-var YModemSendState;
-(function (YModemSendState) {
-    YModemSendState[YModemSendState["WaitingForHeaderRequest"] = 0] = "WaitingForHeaderRequest";
-    YModemSendState[YModemSendState["WaitingForHeaderAck"] = 1] = "WaitingForHeaderAck";
-    YModemSendState[YModemSendState["WaitingForFileRequest"] = 2] = "WaitingForFileRequest";
-    YModemSendState[YModemSendState["SendingData"] = 3] = "SendingData";
-    YModemSendState[YModemSendState["WaitingForFileAck"] = 4] = "WaitingForFileAck";
-})(YModemSendState || (YModemSendState = {}));
-var fTelnetOptions = (function () {
-    function fTelnetOptions() {
-        this.AllowModernScrollback = true;
-        this.BareLFtoCRLF = false;
-        this.BitsPerSecond = 57600;
-        this.ConnectionType = 'telnet';
-        this.Emulation = 'ansi-bbs';
-        this.Enter = '\r';
-        this.Font = 'CP437';
-        this.ForceWss = false;
-        this.Hostname = 'bbs.ftelnet.ca';
-        this.LocalEcho = false;
-        this.NegotiateLocalEcho = true;
-        this.Port = 1123;
-        this.ProxyHostname = '';
-        this.ProxyPort = 1123;
-        this.ProxyPortSecure = 11235;
-        this.RLoginClientUsername = '';
-        this.RLoginServerUsername = '';
-        this.RLoginTerminalType = '';
-        this.ScreenColumns = 80;
-        this.ScreenRows = 25;
-        this.SendLocation = true;
-        this.SplashScreen = '';
-        this.VirtualKeyboardVibrateDuration = 25;
-        this.VirtualKeyboardVisible = DetectMobileBrowser.IsMobile;
-        this.WebSocketUrlPath = '';
-    }
-    return fTelnetOptions;
-}());
-var fTelnetClient = (function () {
-    function fTelnetClient(containerId, options) {
-        var _this = this;
-        this.ondata = new TypedEvent();
-        this._HasFocus = true;
-        this._LastTimer = 0;
-        this._UseModernScrollback = false;
-        if (typeof options === 'undefined') {
-            var Message = 'fTelnet Error: The options parameter is required (pass in an fTelnetOptions object)';
-            alert(Message);
-            throw new Error(Message);
-        }
-        else {
-            this._Options = options;
-            if ((this._Options.Emulation === 'RIP') && (typeof RIP !== 'undefined')) {
-                this._Options.Font = 'RIP_8x8';
-                this._Options.ScreenRows = 43;
-            }
-            else {
-                this._Options.Emulation = 'ansi-bbs';
-            }
-        }
-        if (typeof containerId === 'string') {
-            var Container = document.getElementById(containerId);
-            if (Container === null) {
-                var Message = 'fTelnet Error: fTelnet constructor was passed an invalid container id';
-                alert(Message);
-                throw new Error(Message);
-            }
-            else {
-                this._fTelnetContainer = Container;
-            }
-        }
-        else {
-            var Message = 'fTelnet Error: fTelnet constructor was passed an invalid container id';
-            alert(Message);
-            throw new Error(Message);
-        }
-        if (document.getElementById('fTelnetScript') === null) {
-            var Message = 'fTelnet Error: Script element with id="fTelnetScript" was not found';
-            alert(Message);
-            throw new Error(Message);
-        }
-        if (document.getElementById('fTelnetCss') === null) {
-            var link = document.createElement('link');
-            link.id = 'fTelnetCss';
-            link.rel = 'stylesheet';
-            link.type = 'text/css';
-            link.href = StringUtils.GetUrl('ftelnet.css');
-            document.getElementsByTagName('head')[0].appendChild(link);
-        }
-        if (document.getElementById('fTelnetKeyboardCss') === null) {
-            var link = document.createElement('link');
-            link.id = 'fTelnetKeyboardCss';
-            link.rel = 'stylesheet';
-            link.type = 'text/css';
-            link.href = '';
-            document.getElementsByTagName('head')[0].appendChild(link);
-        }
-        this._InitMessageBar = document.createElement('div');
-        this._InitMessageBar.className = 'fTelnetInitMessage';
-        this._InitMessageBar.innerHTML = 'Initializing fTelnet...';
-        this._fTelnetContainer.appendChild(this._InitMessageBar);
-        this._ClientContainer = document.createElement('div');
-        this._ClientContainer.className = 'fTelnetClientContainer';
-        this._fTelnetContainer.appendChild(this._ClientContainer);
-        this._UseModernScrollback = (this._Options.AllowModernScrollback && DetectMobileBrowser.SupportsModernScrollback && (this._Options.Emulation !== 'RIP'));
-        if (this._UseModernScrollback) {
-            this._ClientContainer.style.overflowX = 'hidden';
-            this._ClientContainer.style.overflowY = 'scroll';
-            this._ClientContainer.style.height = this._Options.ScreenRows * 16 + 'px';
-            this._ClientContainer.style.width = (this._Options.ScreenColumns * 9) + GetScrollbarWidth.Width + 'px';
-            this._ClientContainer.scrollTop = this._ClientContainer.scrollHeight;
-        }
-        this._Crt = new Crt(this._ClientContainer, this._UseModernScrollback);
-        this._InitMessageBar.style.display = 'none';
-        this._Crt.onfontchange.on(function () { _this.OnCrtScreenSizeChanged(); });
-        this._Crt.onkeypressed.on(function () { _this.OnCrtKeyPressed(); });
-        this._Crt.onscreensizechange.on(function () { _this.OnCrtScreenSizeChanged(); });
-        this._Crt.BareLFtoCRLF = this._Options.BareLFtoCRLF;
-        this._Crt.LocalEcho = this._Options.LocalEcho;
-        this._Crt.SetFont(this._Options.Font);
-        this._Crt.SetScreenSize(this._Options.ScreenColumns, this._Options.ScreenRows);
-        this._Ansi = new Ansi(this._Crt);
-        this._Ansi.onesc0c.on(function () { _this.OnAnsiESC0c(); });
-        this._Ansi.onesc5n.on(function () { _this.OnAnsiESC5n(); });
-        this._Ansi.onesc6n.on(function () { _this.OnAnsiESC6n(); });
-        this._Ansi.onesc255n.on(function () { _this.OnAnsiESC255n(); });
-        this._Ansi.onescQ.on(function (font) { _this.OnAnsiESCQ(font); });
-        this._Ansi.onripdetect.on(function () { _this.OnAnsiRIPDetect(); });
-        this._Ansi.onripdisable.on(function () { _this.OnAnsiRIPDisable(); });
-        this._Ansi.onripenable.on(function () { _this.OnAnsiRIPEnable(); });
-        if (this._Options.Emulation === 'RIP') {
-            this._RIP = new RIP(this._Crt, this._Ansi, this._ClientContainer);
-        }
-        if (!('WebSocket' in window) || navigator.userAgent.match('AppleWebKit/534.30')) {
-            this._Crt.WriteLn();
-            this._Crt.WriteLn('Sorry, but your browser doesn\'t support the WebSocket protocol!');
-            this._Crt.WriteLn();
-            this._Crt.WriteLn('WebSockets are how fTelnet connects to the remote server, so without them that');
-            this._Crt.WriteLn('means you won\'t be able to connect anywhere.');
-            this._Crt.WriteLn();
-            this._Crt.WriteLn('If you can, try upgrading your web browser.  If that\'s not an option (ie you\'re');
-            this._Crt.WriteLn('already running the latest version your platform supports, like IE 8 on');
-            this._Crt.WriteLn('Windows XP), then try switching to a different web browser.');
-            this._Crt.WriteLn();
-            this._Crt.WriteLn('Feel free to contact me (http://www.ftelnet.ca/contact/) if you think you\'re');
-            this._Crt.WriteLn('seeing this message in error, and I\'ll look into it.  Be sure to let me know');
-            this._Crt.WriteLn('what browser you use, as well as which version it is.');
-            console.log('fTelnet Error: WebSocket not supported');
-        }
-        this._FocusWarningBar = document.createElement('div');
-        this._FocusWarningBar.className = 'fTelnetFocusWarning';
-        this._FocusWarningBar.innerHTML = '*** CLICK HERE TO ENABLE KEYBOARD INPUT ***';
-        this._FocusWarningBar.style.display = 'none';
-        this._fTelnetContainer.appendChild(this._FocusWarningBar);
-        this._ScrollbackBar = document.createElement('div');
-        this._ScrollbackBar.className = 'fTelnetScrollback';
-        if (this._UseModernScrollback) {
-            this._ScrollbackBar.innerHTML = 'SCROLLBACK: Scroll back down to the bottom to exit scrollback mode';
-        }
-        else {
-            var ScrollbackLabel = document.createElement('span');
-            ScrollbackLabel.innerHTML = 'SCROLLBACK:';
-            this._ScrollbackBar.appendChild(ScrollbackLabel);
-            var ScrollbackLineUp = document.createElement('a');
-            ScrollbackLineUp.href = '#';
-            ScrollbackLineUp.innerHTML = 'Line Up';
-            ScrollbackLineUp.addEventListener('click', function (e) { _this._Crt.PushKeyDown(KeyboardKeys.UP, KeyboardKeys.UP, false, false, false); e.preventDefault(); return false; });
-            this._ScrollbackBar.appendChild(ScrollbackLineUp);
-            var ScrollbackLineDown = document.createElement('a');
-            ScrollbackLineDown.href = '#';
-            ScrollbackLineDown.innerHTML = 'Line Down';
-            ScrollbackLineDown.addEventListener('click', function (e) { _this._Crt.PushKeyDown(KeyboardKeys.DOWN, KeyboardKeys.DOWN, false, false, false); e.preventDefault(); return false; });
-            this._ScrollbackBar.appendChild(ScrollbackLineDown);
-            var ScrollbackPageUp = document.createElement('a');
-            ScrollbackPageUp.href = '#';
-            ScrollbackPageUp.innerHTML = 'Page Up';
-            ScrollbackPageUp.addEventListener('click', function (e) { _this._Crt.PushKeyDown(KeyboardKeys.PAGE_UP, KeyboardKeys.PAGE_UP, false, false, false); e.preventDefault(); return false; });
-            this._ScrollbackBar.appendChild(ScrollbackPageUp);
-            var ScrollbackPageDown = document.createElement('a');
-            ScrollbackPageDown.href = '#';
-            ScrollbackPageDown.innerHTML = 'Page Down';
-            ScrollbackPageDown.addEventListener('click', function (e) { _this._Crt.PushKeyDown(KeyboardKeys.PAGE_DOWN, KeyboardKeys.PAGE_DOWN, false, false, false); e.preventDefault(); return false; });
-            this._ScrollbackBar.appendChild(ScrollbackPageDown);
-            var ScrollbackExit = document.createElement('a');
-            ScrollbackExit.href = '#';
-            ScrollbackExit.innerHTML = 'Exit';
-            ScrollbackExit.addEventListener('click', function (e) { _this.ExitScrollback(); e.preventDefault(); return false; });
-            this._ScrollbackBar.appendChild(ScrollbackExit);
-        }
-        this._ScrollbackBar.style.display = 'none';
-        this._fTelnetContainer.appendChild(this._ScrollbackBar);
-        this._StatusBar = document.createElement('div');
-        this._StatusBar.className = 'fTelnetStatusBar';
-        this._fTelnetContainer.appendChild(this._StatusBar);
-        this._MenuButton = document.createElement('a');
-        this._MenuButton.className = 'fTelnetMenuButton';
-        this._MenuButton.href = '#';
-        this._MenuButton.innerHTML = 'Menu';
-        this._MenuButton.addEventListener('click', function (e) { _this.OnMenuButtonClick(); e.preventDefault(); return false; }, false);
-        this._StatusBar.appendChild(this._MenuButton);
-        this._ConnectButton = document.createElement('a');
-        this._ConnectButton.className = 'fTelnetConnectButton';
-        this._ConnectButton.href = '#';
-        this._ConnectButton.innerHTML = 'Connect';
-        this._ConnectButton.addEventListener('click', function (e) { _this.Connect(); e.preventDefault(); return false; }, false);
-        this._StatusBar.appendChild(this._ConnectButton);
-        this._StatusBarLabel = document.createElement('span');
-        this._StatusBarLabel.className = 'fTelnetStatusBarLabel';
-        this._StatusBarLabel.innerHTML = 'Not connected';
-        this._StatusBar.appendChild(this._StatusBarLabel);
-        this._MenuButtons = document.createElement('div');
-        this._MenuButtons.className = 'fTelnetMenuButtons';
-        var MenuButtonsTable = document.createElement('table');
-        var MenuButtonsRow1 = document.createElement('tr');
-        var MenuButtonsRow1Cell1 = document.createElement('td');
-        var MenuButtonsConnect = document.createElement('a');
-        MenuButtonsConnect.href = '#';
-        MenuButtonsConnect.innerHTML = 'Connect';
-        MenuButtonsConnect.addEventListener('click', function (me) { _this.Connect(); me.preventDefault(); return false; });
-        MenuButtonsRow1Cell1.appendChild(MenuButtonsConnect);
-        MenuButtonsRow1.appendChild(MenuButtonsRow1Cell1);
-        var MenuButtonsRow1Cell2 = document.createElement('td');
-        var MenuButtonsDisconnect = document.createElement('a');
-        MenuButtonsDisconnect.href = '#';
-        MenuButtonsDisconnect.innerHTML = 'Disconnect';
-        MenuButtonsDisconnect.addEventListener('click', function (me) { _this.Disconnect(true); me.preventDefault(); return false; });
-        MenuButtonsRow1Cell2.appendChild(MenuButtonsDisconnect);
-        MenuButtonsRow1.appendChild(MenuButtonsRow1Cell2);
-        MenuButtonsTable.appendChild(MenuButtonsRow1);
-        if (!DetectMobileBrowser.IsMobile) {
-            var MenuButtonsRow2 = document.createElement('tr');
-            var MenuButtonsRow2Cell1 = document.createElement('td');
-            var MenuButtonsCopy = document.createElement('a');
-            MenuButtonsCopy.href = '#';
-            MenuButtonsCopy.innerHTML = 'Copy';
-            MenuButtonsCopy.addEventListener('click', function (me) { _this.ClipboardCopy(); me.preventDefault(); return false; });
-            MenuButtonsRow2Cell1.appendChild(MenuButtonsCopy);
-            MenuButtonsRow2.appendChild(MenuButtonsRow2Cell1);
-            var MenuButtonsRow2Cell2 = document.createElement('td');
-            var MenuButtonsPaste = document.createElement('a');
-            MenuButtonsPaste.href = '#';
-            MenuButtonsPaste.innerHTML = 'Paste';
-            MenuButtonsPaste.addEventListener('click', function (me) { _this.ClipboardPaste(); me.preventDefault(); return false; });
-            MenuButtonsRow2Cell2.appendChild(MenuButtonsPaste);
-            MenuButtonsRow2.appendChild(MenuButtonsRow2Cell2);
-            MenuButtonsTable.appendChild(MenuButtonsRow2);
-        }
-        if ((typeof YModemReceive !== 'undefined') && (typeof YModemSend !== 'undefined')) {
-            var MenuButtonsRow3 = document.createElement('tr');
-            var MenuButtonsRow3Cell1 = document.createElement('td');
-            var MenuButtonsUpload = document.createElement('a');
-            MenuButtonsUpload.href = '#';
-            MenuButtonsUpload.innerHTML = 'Upload';
-            MenuButtonsUpload.addEventListener('click', function (me) { _this.Upload(); me.preventDefault(); return false; });
-            MenuButtonsRow3Cell1.appendChild(MenuButtonsUpload);
-            MenuButtonsRow3.appendChild(MenuButtonsRow3Cell1);
-            var MenuButtonsRow3Cell2 = document.createElement('td');
-            var MenuButtonsDownload = document.createElement('a');
-            MenuButtonsDownload.href = '#';
-            MenuButtonsDownload.innerHTML = 'Download';
-            MenuButtonsDownload.addEventListener('click', function (me) { _this.Download(); me.preventDefault(); return false; });
-            MenuButtonsRow3Cell2.appendChild(MenuButtonsDownload);
-            MenuButtonsRow3.appendChild(MenuButtonsRow3Cell2);
-            MenuButtonsTable.appendChild(MenuButtonsRow3);
-        }
-        if (!window.cordova) {
-            var MenuButtonsRow4 = document.createElement('tr');
-            var MenuButtonsRow4Cell1 = document.createElement('td');
-            var MenuButtonsKeyboard = document.createElement('a');
-            MenuButtonsKeyboard.href = '#';
-            MenuButtonsKeyboard.innerHTML = 'Keyboard';
-            MenuButtonsKeyboard.addEventListener('click', function (me) { _this.VirtualKeyboardVisible = !_this.VirtualKeyboardVisible; me.preventDefault(); return false; });
-            MenuButtonsRow4Cell1.appendChild(MenuButtonsKeyboard);
-            MenuButtonsRow4.appendChild(MenuButtonsRow4Cell1);
-            var MenuButtonsRow4Cell2 = document.createElement('td');
-            var MenuButtonsFullScreen = document.createElement('a');
-            MenuButtonsFullScreen.href = '#';
-            MenuButtonsFullScreen.innerHTML = 'Full&nbsp;Screen';
-            MenuButtonsFullScreen.addEventListener('click', function (me) { _this.FullScreenToggle(); me.preventDefault(); return false; });
-            MenuButtonsRow4Cell2.appendChild(MenuButtonsFullScreen);
-            MenuButtonsRow4.appendChild(MenuButtonsRow4Cell2);
-            MenuButtonsTable.appendChild(MenuButtonsRow4);
-        }
-        if (!this._UseModernScrollback) {
-            var MenuButtonsRow5 = document.createElement('tr');
-            var MenuButtonsRow5Cell1 = document.createElement('td');
-            MenuButtonsRow5Cell1.colSpan = 2;
-            var MenuButtonsScrollback = document.createElement('a');
-            MenuButtonsScrollback.href = '#';
-            MenuButtonsScrollback.innerHTML = 'View Scrollback Buffer';
-            MenuButtonsScrollback.addEventListener('click', function (me) { _this.EnterScrollback(); me.preventDefault(); return false; });
-            MenuButtonsRow5Cell1.appendChild(MenuButtonsScrollback);
-            MenuButtonsRow5.appendChild(MenuButtonsRow5Cell1);
-            MenuButtonsTable.appendChild(MenuButtonsRow5);
-        }
-        this._MenuButtons.appendChild(MenuButtonsTable);
-        this._MenuButtons.style.display = 'none';
-        this._MenuButtons.style.zIndex = '150';
-        this._fTelnetContainer.appendChild(this._MenuButtons);
-        this._VirtualKeyboard = new VirtualKeyboard(this._Crt, this._fTelnetContainer);
-        this._VirtualKeyboard.VibrateDurationInMilliseconds = this._Options.VirtualKeyboardVibrateDuration;
-        this._VirtualKeyboard.Visible = this._Options.VirtualKeyboardVisible;
-        this.OnCrtScreenSizeChanged();
-        if (this._Options.Emulation === 'RIP') {
-            if (this._Options.SplashScreen === '') {
-                this._RIP.Parse(atob('G1swbRtbMkobWzA7MEgbWzE7NDQ7MzRt2sTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTEG1swOzQ0OzMwbb8bWzBtDQobWzE7NDQ7MzRtsyAgG1szN21XZWxjb21lISAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAbWzA7NDQ7MzBtsxtbMG0NChtbMTs0NDszNG3AG1swOzQ0OzMwbcTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTE2RtbMG0NCg0KG1sxbSAbWzBtIBtbMTs0NDszNG3axMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMQbWzA7NDQ7MzBtvxtbMG0NCiAgG1sxOzQ0OzM0bbMbWzA7MzRt29vb2xtbMzBt29vb29vb29vb29vb29vb29vb29vb2xtbMzRt29vb29vbG1s0NDszMG2zG1swbQ0KICAbWzE7NDQ7MzRtsxtbMDszNG3b29vbG1sxOzMwbdvb29vb29vb29vb29vb29vb29vb29sbWzA7MzBt29sbWzM0bdvb29sbWzQ0OzMwbbMbWzBtDQogIBtbMTs0NDszNG2zG1swOzM0bdvb29sbWzE7MzBt29vb2xtbMG3b29vb29vb29vb29sbWzFt29vb2xtbMzBt29sbWzA7MzBt29sbWzM0bdvb29sbWzQ0OzMwbbMbWzBtDQogIBtbMTs0NDszNG2zG1swOzM0bdvb29sbWzE7MzBt29vb2xtbMG3b29vb29vb29vbG1sxbdvb29sbWzBt29sbWzE7MzBt29sbWzA7MzBt29sbWzM0bdvb29sbWzQ0OzMwbbMbWzBtDQogIBtbMTs0NDszNG2zG1swOzM0bdvb29sbWzE7MzBt29vb2xtbMG3b29vb29vb2xtbMW3b29vbG1swbdvbG1sxbdvbG1szMG3b2xtbMDszMG3b2xtbMzRt29vb2xtbNDQ7MzBtsxtbMG0NCiAgG1sxOzQ0OzM0bbMbWzA7MzRt29vb2xtbMTszMG3b29vbG1swbdvb29vb2xtbMW3b29vbG1swbdvbG1sxbdvb29sbWzMwbdvbG1swOzMwbdvbG1szNG3b29vbG1s0NDszMG2zG1swbQ0KICAbWzE7NDQ7MzRtsxtbMDszNG3b29vbG1sxOzMwbdvb29sbWzBt29vb2xtbMW3b29vbG1swbdvbG1sxbdvb29vb2xtbMzBt29sbWzA7MzBt29sbWzM0bdvb29sbWzQ0OzMwbbMbWzQwOzM3bQ0KICAbWzE7NDQ7MzRtsxtbMDszNG3b29vbG1sxOzMwbdvbG1swOzMwbdvbG1sxbdvb29vb29vb29vb29vb29vb2xtbMDszMG3b2xtbMzRt29vb2xtbNDQ7MzBtsxtbNDA7MzdtDQogIBtbMTs0NDszNG2zG1swOzM0bdvb29sbWzE7MzBt29sbWzBt29vb29vb29vb29vb29vb29vb29sbWzMwbdvbG1szNG3b29vbG1s0NDszMG2zG1s0MDszN20NCiAgG1sxOzQ0OzM0bbMbWzA7MzBt29vb29vb29vb29vb29vb29vb29vb29vb29vb29vbG1szNG3b2xtbNDQ7MzBtsxtbNDA7MzdtDQogIBtbMTs0NDszNG2zG1s0MDszMG3b2xtbMG3b29vb29vb29vb29vb29vb29vb29vb29vb29vbG1szMG3b2xtbNDRtsxtbNDA7MzdtIBtbMzRtIBtbMTs0NzszN23axMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMQbWzMwbb8bWzBtDQogIBtbMTs0NDszNG2zG1swOzMwbdvbG1sxbdvb29vb29vb29vb29vb29sbWzA7MzBt29vb29vb29vb2xtbMW3b2xtbMDszMG3b2xtbNDRtsxtbNDA7MzdtIBtbMzRtIBtbMTs0NzszN22zICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAbWzMwbbMbWzBtDQogIBtbMTs0NDszNG2zG1s0MDszMG3b2xtbMG3b29vb29vb29vb29vb29vb29vb29vb29vb29vbG1szMG3b2xtbNDRtsxtbMG0gG1szNG0gG1sxOzQ3OzM3bbMgICAbWzM0bWZUZWxuZXQgLS0gVGVsbmV0IGZvciB0aGUgV2ViICAgICAgG1szMG2zG1swbQ0KG1sxbSAbWzBtIBtbMTs0NDszNG2zG1swOzMwbdvbG1sxbdvb29vb29vb29vb29vb29vb29vb29vb2xtbMDszMG3b29vb29sbWzQ0bbMbWzBtIBtbMzRtIBtbMTs0NzszN22zICAgICAbWzA7NDc7MzRtV2ViIGJhc2VkIEJCUyB0ZXJtaW5hbCBjbGllbnQgICAgG1sxOzMwbbMbWzBtDQogIBtbMTs0NDszNG2zG1swOzM0bdvbG1szMG3b29vb29vb29vb29vb29vb29vb29vb29vb29vbG1szNG3b2xtbNDQ7MzBtsxtbMG0gG1szNG0gG1sxOzQ3OzM3bbMgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIBtbMzBtsxtbMG0NCiAgG1sxOzQ0OzM0bcAbWzA7NDQ7MzBtxMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTZG1swbSAbWzM0bSAbWzE7NDc7MzdtwBtbMzBtxMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTZG1swbQ0KDQobWzExQxtbMTszMm1Db3B5cmlnaHQgKEMpIDIwMDkt'));
-                this._RIP.Parse(new Date().getFullYear().toString());
-                this._RIP.Parse(atob('IFImTSBTb2Z0d2FyZS4gIEFsbCBSaWdodHMgUmVzZXJ2ZWQNChtbMDszNG3ExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTE'));
-            }
-            else {
-                this._RIP.Parse(atob(this._Options.SplashScreen));
-            }
-        }
-        else {
-            if (this._Options.SplashScreen === '') {
-                this._Ansi.Write(atob('G1swbRtbMkobWzA7MEgbWzE7NDQ7MzRt2sTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTEG1swOzQ0OzMwbb8bWzBtDQobWzE7NDQ7MzRtsyAgG1szN21XZWxjb21lISAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAbWzA7NDQ7MzBtsxtbMG0NChtbMTs0NDszNG3AG1swOzQ0OzMwbcTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTE2RtbMG0NCg0KG1sxbSAbWzBtIBtbMTs0NDszNG3axMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMQbWzA7NDQ7MzBtvxtbMG0NCiAgG1sxOzQ0OzM0bbMbWzA7MzRt29vb2xtbMzBt29vb29vb29vb29vb29vb29vb29vb2xtbMzRt29vb29vbG1s0NDszMG2zG1swbQ0KICAbWzE7NDQ7MzRtsxtbMDszNG3b29vbG1sxOzMwbdvb29vb29vb29vb29vb29vb29vb29sbWzA7MzBt29sbWzM0bdvb29sbWzQ0OzMwbbMbWzBtDQogIBtbMTs0NDszNG2zG1swOzM0bdvb29sbWzE7MzBt29vb2xtbMG3b29vb29vb29vb29sbWzFt29vb2xtbMzBt29sbWzA7MzBt29sbWzM0bdvb29sbWzQ0OzMwbbMbWzBtDQogIBtbMTs0NDszNG2zG1swOzM0bdvb29sbWzE7MzBt29vb2xtbMG3b29vb29vb29vbG1sxbdvb29sbWzBt29sbWzE7MzBt29sbWzA7MzBt29sbWzM0bdvb29sbWzQ0OzMwbbMbWzBtDQogIBtbMTs0NDszNG2zG1swOzM0bdvb29sbWzE7MzBt29vb2xtbMG3b29vb29vb2xtbMW3b29vbG1swbdvbG1sxbdvbG1szMG3b2xtbMDszMG3b2xtbMzRt29vb2xtbNDQ7MzBtsxtbMG0NCiAgG1sxOzQ0OzM0bbMbWzA7MzRt29vb2xtbMTszMG3b29vbG1swbdvb29vb2xtbMW3b29vbG1swbdvbG1sxbdvb29sbWzMwbdvbG1swOzMwbdvbG1szNG3b29vbG1s0NDszMG2zG1swbQ0KICAbWzE7NDQ7MzRtsxtbMDszNG3b29vbG1sxOzMwbdvb29sbWzBt29vb2xtbMW3b29vbG1swbdvbG1sxbdvb29vb2xtbMzBt29sbWzA7MzBt29sbWzM0bdvb29sbWzQ0OzMwbbMbWzQwOzM3bQ0KICAbWzE7NDQ7MzRtsxtbMDszNG3b29vbG1sxOzMwbdvbG1swOzMwbdvbG1sxbdvb29vb29vb29vb29vb29vb2xtbMDszMG3b2xtbMzRt29vb2xtbNDQ7MzBtsxtbNDA7MzdtDQogIBtbMTs0NDszNG2zG1swOzM0bdvb29sbWzE7MzBt29sbWzBt29vb29vb29vb29vb29vb29vb29sbWzMwbdvbG1szNG3b29vbG1s0NDszMG2zG1s0MDszN20NCiAgG1sxOzQ0OzM0bbMbWzA7MzBt29vb29vb29vb29vb29vb29vb29vb29vb29vb29vbG1szNG3b2xtbNDQ7MzBtsxtbNDA7MzdtDQogIBtbMTs0NDszNG2zG1s0MDszMG3b2xtbMG3b29vb29vb29vb29vb29vb29vb29vb29vb29vbG1szMG3b2xtbNDRtsxtbNDA7MzdtIBtbMzRtIBtbMTs0NzszN23axMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMQbWzMwbb8bWzBtDQogIBtbMTs0NDszNG2zG1swOzMwbdvbG1sxbdvb29vb29vb29vb29vb29sbWzA7MzBt29vb29vb29vb2xtbMW3b2xtbMDszMG3b2xtbNDRtsxtbNDA7MzdtIBtbMzRtIBtbMTs0NzszN22zICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAbWzMwbbMbWzBtDQogIBtbMTs0NDszNG2zG1s0MDszMG3b2xtbMG3b29vb29vb29vb29vb29vb29vb29vb29vb29vbG1szMG3b2xtbNDRtsxtbMG0gG1szNG0gG1sxOzQ3OzM3bbMgICAbWzM0bWZUZWxuZXQgLS0gVGVsbmV0IGZvciB0aGUgV2ViICAgICAgG1szMG2zG1swbQ0KG1sxbSAbWzBtIBtbMTs0NDszNG2zG1swOzMwbdvbG1sxbdvb29vb29vb29vb29vb29vb29vb29vb2xtbMDszMG3b29vb29sbWzQ0bbMbWzBtIBtbMzRtIBtbMTs0NzszN22zICAgICAbWzA7NDc7MzRtV2ViIGJhc2VkIEJCUyB0ZXJtaW5hbCBjbGllbnQgICAgG1sxOzMwbbMbWzBtDQogIBtbMTs0NDszNG2zG1swOzM0bdvbG1szMG3b29vb29vb29vb29vb29vb29vb29vb29vb29vbG1szNG3b2xtbNDQ7MzBtsxtbMG0gG1szNG0gG1sxOzQ3OzM3bbMgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIBtbMzBtsxtbMG0NCiAgG1sxOzQ0OzM0bcAbWzA7NDQ7MzBtxMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTZG1swbSAbWzM0bSAbWzE7NDc7MzdtwBtbMzBtxMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTZG1swbQ0KDQobWzExQxtbMTszMm0bWzE7MjU1OzE3ODsxMjd0Q29weXJpZ2h0IChDKSAyMDA5LQ=='));
-                this._Ansi.Write(new Date().getFullYear().toString());
-                this._Ansi.Write(atob('IFImTSBTb2Z0d2FyZS4gIEFsbCBSaWdodHMgUmVzZXJ2ZWQNChtbMDszNG3ExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTE'));
-            }
-            else {
-                this._Ansi.Write(atob(this._Options.SplashScreen));
-            }
-        }
-        this._Timer = setInterval(function () { _this.OnTimer(); }, 250);
-        this._UploadInput = document.createElement('input');
-        this._UploadInput.type = 'file';
-        this._UploadInput.className = 'fTelnetUpload';
-        this._UploadInput.onchange = function () { _this.OnUploadFileSelected(); };
-        this._UploadInput.style.display = 'none';
-        this._fTelnetContainer.appendChild(this._UploadInput);
-    }
-    fTelnetClient.prototype.ClipboardCopy = function () {
-        if (typeof this._MenuButtons !== 'undefined') {
-            this._MenuButtons.style.display = 'none';
-        }
-        alert('Click and drag your mouse over the text you want to copy');
-    };
-    fTelnetClient.prototype.ClipboardPaste = function () {
-        if (typeof this._MenuButtons !== 'undefined') {
-            this._MenuButtons.style.display = 'none';
-        }
-        if (typeof this._Connection === 'undefined') {
-            return;
-        }
-        if (!this._Connection.connected) {
-            return;
-        }
-        var Text = Clipboard.GetData();
-        for (var i = 0; i < Text.length; i++) {
-            var B = Text.charCodeAt(i);
-            if ((B === 13) || (B === 32)) {
-                this._Crt.PushKeyDown(0, B, false, false, false);
-            }
-            else if ((B >= 33) && (B <= 126)) {
-                this._Crt.PushKeyPress(B, 0, false, false, false);
-            }
-        }
-    };
-    fTelnetClient.prototype.Connect = function () {
-        var _this = this;
-        if (typeof this._MenuButtons !== 'undefined') {
-            this._MenuButtons.style.display = 'none';
-        }
-        if ((typeof this._Connection !== 'undefined') && (this._Connection.connected)) {
-            return;
-        }
-        switch (this._Options.ConnectionType) {
-            case 'rlogin':
-                this._Connection = new RLoginConnection();
-                break;
-            case 'tcp':
-                this._Connection = new WebSocketConnection();
-                break;
-            default:
-                this._Connection = new TelnetConnection(this._Crt);
-                this._Connection.LocalEcho = this._Options.LocalEcho;
-                this._Connection.onlocalecho.on(function (value) { _this.OnConnectionLocalEcho(value); });
-                this._Connection.SendLocation = this._Options.SendLocation;
-                break;
-        }
-        this._Connection.onclose.on(function () { _this.OnConnectionClose(); });
-        this._Connection.onconnect.on(function () { _this.OnConnectionConnect(); });
-        this._Connection.ondata.on(function () { _this.OnConnectionData(); });
-        this._Connection.onioerror.on(function () { _this.OnConnectionIOError(); });
-        this._Connection.onsecurityerror.on(function () { _this.OnConnectionSecurityError(); });
-        if (this._Options.Emulation === 'RIP') {
-            this._RIP.ResetWindows();
-        }
-        else {
-            this._Crt.NormVideo();
-            this._Crt.ClrScr();
-        }
-        if (this._Options.ProxyHostname === '') {
-            this._ConnectButton.style.display = 'none';
-            this._StatusBarLabel.innerHTML = 'Connecting to ' + this._Options.Hostname + ':' + this._Options.Port;
-            this._StatusBar.style.backgroundColor = 'blue';
-            this._ClientContainer.style.opacity = '1.0';
-            this._Connection.connect(this._Options.Hostname, this._Options.Port, this._Options.WebSocketUrlPath, this._Options.ForceWss);
-        }
-        else {
-            this._ConnectButton.style.display = 'none';
-            this._StatusBarLabel.innerHTML = 'Connecting to ' + this._Options.Hostname + ':' + this._Options.Port + ' via ' + this._Options.ProxyHostname;
-            this._StatusBar.style.backgroundColor = 'blue';
-            this._ClientContainer.style.opacity = '1.0';
-            this._Connection.connect(this._Options.Hostname, this._Options.Port, '', this._Options.ForceWss, this._Options.ProxyHostname, this._Options.ProxyPort, this._Options.ProxyPortSecure);
-        }
-    };
-    Object.defineProperty(fTelnetClient.prototype, "Connected", {
-        get: function () {
-            if (typeof this._Connection === 'undefined') {
-                return false;
-            }
-            return this._Connection.connected;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(fTelnetClient.prototype, "Crt", {
-        get: function () {
-            return this._Crt;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    fTelnetClient.prototype.Disconnect = function (prompt) {
-        if (typeof this._MenuButtons !== 'undefined') {
-            this._MenuButtons.style.display = 'none';
-        }
-        if (typeof this._Connection === 'undefined') {
-            return true;
-        }
-        if (!this._Connection.connected) {
-            return true;
-        }
-        if (!prompt || confirm('Are you sure you want to disconnect?')) {
-            this._Connection.onclose.off();
-            this._Connection.onconnect.off();
-            this._Connection.ondata.off();
-            this._Connection.onioerror.off();
-            this._Connection.onlocalecho.off();
-            this._Connection.onsecurityerror.off();
-            this._Connection.close();
-            delete this._Connection;
-            this.OnConnectionClose();
-            return true;
-        }
-        return false;
-    };
-    fTelnetClient.prototype.Download = function () {
-        var _this = this;
-        if (typeof this._MenuButtons !== 'undefined') {
-            this._MenuButtons.style.display = 'none';
-        }
-        if (typeof this._Connection === 'undefined') {
-            return;
-        }
-        if (!this._Connection.connected) {
-            return;
-        }
-        this._YModemReceive = new YModemReceive(this._Crt, this._Connection);
-        if (typeof this._Timer !== 'undefined') {
-            clearInterval(this._Timer);
-            delete this._Timer;
-        }
-        this._YModemReceive.ontransfercomplete.on(function () { _this.OnDownloadComplete(); });
-        this._YModemReceive.Download();
-    };
-    fTelnetClient.prototype.EnterScrollback = function () {
-        if (typeof this._MenuButtons !== 'undefined') {
-            this._MenuButtons.style.display = 'none';
-        }
-        if (typeof this._ScrollbackBar !== 'undefined') {
-            if (this._ScrollbackBar.style.display = 'none') {
-                this._Crt.EnterScrollback();
-                this._ScrollbackBar.style.display = 'block';
-            }
-        }
-    };
-    fTelnetClient.prototype.ExitScrollback = function () {
-        if (typeof this._ScrollbackBar !== 'undefined') {
-            if (this._ScrollbackBar.style.display = 'block') {
-                this._Crt.ExitScrollback();
-                this._ScrollbackBar.style.display = 'none';
-            }
-        }
-    };
-    fTelnetClient.prototype.FullScreenToggle = function () {
-        if (typeof this._MenuButtons !== 'undefined') {
-            this._MenuButtons.style.display = 'none';
-        }
-        if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
-            if (this._fTelnetContainer.requestFullscreen) {
-                this._fTelnetContainer.requestFullscreen();
-            }
-            else if (this._fTelnetContainer.msRequestFullscreen) {
-                this._fTelnetContainer.msRequestFullscreen();
-            }
-            else if (this._fTelnetContainer.mozRequestFullScreen) {
-                this._fTelnetContainer.mozRequestFullScreen();
-            }
-            else if (this._fTelnetContainer.webkitRequestFullscreen) {
-                this._fTelnetContainer.webkitRequestFullscreen();
-            }
-        }
-        else {
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            }
-            else if (document.msExitFullscreen) {
-                document.msExitFullscreen();
-            }
-            else if (document.mozCancelFullScreen) {
-                document.mozCancelFullScreen();
-            }
-            else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
-            }
-        }
-    };
-    fTelnetClient.prototype.OnAnsiESC0c = function () {
-        if (typeof this._Connection === 'undefined') {
-            return;
-        }
-        if (!this._Connection.connected) {
-            return;
-        }
-        this._Connection.writeString('\x1B[?50;86;84;88c');
-    };
-    fTelnetClient.prototype.OnAnsiESC5n = function () {
-        if (typeof this._Connection === 'undefined') {
-            return;
-        }
-        if (!this._Connection.connected) {
-            return;
-        }
-        this._Connection.writeString('\x1B[0n');
-    };
-    fTelnetClient.prototype.OnAnsiESC6n = function () {
-        if (typeof this._Connection === 'undefined') {
-            return;
-        }
-        if (!this._Connection.connected) {
-            return;
-        }
-        this._Connection.writeString(this._Ansi.CursorPosition());
-    };
-    fTelnetClient.prototype.OnAnsiESC255n = function () {
-        if (typeof this._Connection === 'undefined') {
-            return;
-        }
-        if (!this._Connection.connected) {
-            return;
-        }
-        this._Connection.writeString(this._Ansi.CursorPosition(this._Crt.WindCols, this._Crt.WindRows));
-    };
-    fTelnetClient.prototype.OnAnsiESCQ = function (font) {
-        if (this._Options.Emulation !== 'RIP') {
-            this._Crt.SetFont(font);
-        }
-    };
-    fTelnetClient.prototype.OnAnsiRIPDetect = function () {
-        if (this._Options.Emulation === 'RIP') {
-            if (typeof this._Connection === 'undefined') {
-                return;
-            }
-            if (!this._Connection.connected) {
-                return;
-            }
-            this._Connection.writeString('RIPSCRIP015400');
-        }
-    };
-    fTelnetClient.prototype.OnAnsiRIPDisable = function () {
-    };
-    fTelnetClient.prototype.OnAnsiRIPEnable = function () {
-    };
-    fTelnetClient.prototype.OnConnectionClose = function () {
-        this._ConnectButton.innerHTML = 'Reconnect';
-        this._ConnectButton.style.display = 'inline';
-        this._StatusBarLabel.innerHTML = 'Disconnected from ' + this._Options.Hostname + ':' + this._Options.Port;
-        this._StatusBar.style.backgroundColor = 'red';
-        this._ClientContainer.style.opacity = '0.5';
-    };
-    fTelnetClient.prototype.OnConnectionConnect = function () {
-        this._Crt.ClrScr();
-        if (this._Options.ProxyHostname === '') {
-            this._StatusBarLabel.innerHTML = 'Connected to ' + this._Options.Hostname + ':' + this._Options.Port;
-            this._StatusBar.style.backgroundColor = 'blue';
-            this._ClientContainer.style.opacity = '1.0';
-        }
-        else {
-            this._StatusBarLabel.innerHTML = 'Connected to ' + this._Options.Hostname + ':' + this._Options.Port + ' via ' + this._Options.ProxyHostname;
-            this._StatusBar.style.backgroundColor = 'blue';
-            this._ClientContainer.style.opacity = '1.0';
-        }
-        if (this._Options.ConnectionType === 'rlogin') {
-            var TerminalType = this._Options.RLoginTerminalType;
-            if (TerminalType === '') {
-                TerminalType = this._Options.Emulation + '/' + this._Options.BitsPerSecond;
-            }
-            if (typeof this._Connection === 'undefined') {
-                return;
-            }
-            if (!this._Connection.connected) {
-                return;
-            }
-            this._Connection.writeString(String.fromCharCode(0) + this._Options.RLoginClientUsername + String.fromCharCode(0) + this._Options.RLoginServerUsername + String.fromCharCode(0) + TerminalType + String.fromCharCode(0));
-            this._Connection.flush();
-        }
-    };
-    fTelnetClient.prototype.OnConnectionData = function () {
-        var _this = this;
-        if (typeof this._Timer !== 'undefined') {
-            if (typeof this._Connection !== 'undefined') {
-                var MSecElapsed = new Date().getTime() - this._LastTimer;
-                if (MSecElapsed < 1) {
-                    MSecElapsed = 1;
-                }
-                var BytesToRead = Math.floor(this._Options.BitsPerSecond / 8 / (1000 / MSecElapsed));
-                if (BytesToRead < 1) {
-                    BytesToRead = 1;
-                }
-                var Data = this._Connection.readString(BytesToRead);
-                if (Data.length > 0) {
-                    this.ondata.trigger(Data);
-                    if (this._Options.Emulation === 'RIP') {
-                        this._RIP.Parse(Data);
-                    }
-                    else {
-                        this._Ansi.Write(Data);
-                    }
-                }
-                if (this._Connection.bytesAvailable > 0) {
-                    clearTimeout(this._DataTimer);
-                    this._DataTimer = setTimeout(function () { _this.OnConnectionData(); }, 50);
-                }
-            }
-        }
-        this._LastTimer = new Date().getTime();
-    };
-    fTelnetClient.prototype.OnConnectionLocalEcho = function (value) {
-        if (this._Options.NegotiateLocalEcho) {
-            this._Options.LocalEcho = value;
-            this._Crt.LocalEcho = value;
-        }
-    };
-    fTelnetClient.prototype.OnConnectionIOError = function () {
-        console.log('fTelnet.OnConnectionIOError');
-    };
-    fTelnetClient.prototype.OnConnectionSecurityError = function () {
-        this._ConnectButton.innerHTML = 'Retry Connection';
-        this._ConnectButton.style.display = 'inline';
-        if (this._Options.ProxyHostname === '') {
-            this._StatusBarLabel.innerHTML = 'Unable to connect to ' + this._Options.Hostname + ':' + this._Options.Port;
-            this._StatusBar.style.backgroundColor = 'red';
-            this._ClientContainer.style.opacity = '0.5';
-        }
-        else {
-            this._StatusBarLabel.innerHTML = 'Unable to connect to ' + this._Options.Hostname + ':' + this._Options.Port + ' via ' + this._Options.ProxyHostname;
-            this._StatusBar.style.backgroundColor = 'red';
-            this._ClientContainer.style.opacity = '0.5';
-        }
-    };
-    fTelnetClient.prototype.OnCrtKeyPressed = function () {
-        if (typeof this._Timer !== 'undefined') {
-            while (this._Crt.KeyPressed()) {
-                var KPE = this._Crt.ReadKey();
-                if (typeof KPE !== 'undefined') {
-                    if (KPE.keyString.length > 0) {
-                        if ((typeof this._Connection !== 'undefined') && (this._Connection.connected)) {
-                            if (KPE.keyString === '\r\n') {
-                                this._Connection.writeString(this._Options.Enter);
-                            }
-                            else {
-                                this._Connection.writeString(KPE.keyString);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    };
-    fTelnetClient.prototype.OnCrtScreenSizeChanged = function () {
-        var NewWidth;
-        var NewHeight;
-        if (this._Options.Emulation === 'RIP') {
-            NewWidth = 640;
-        }
-        else {
-            if (this._UseModernScrollback) {
-                NewWidth = this._Crt.ScreenCols * this._Crt.Font.Width + GetScrollbarWidth.Width;
-                NewHeight = this._Crt.ScreenRows * this._Crt.Font.Height;
-                this._ClientContainer.style.width = NewWidth + 'px';
-                this._ClientContainer.style.height = NewHeight + 'px';
-                this._ClientContainer.scrollTop = this._ClientContainer.scrollHeight;
-            }
-            else {
-                NewWidth = this._Crt.ScreenCols * this._Crt.Font.Width;
-            }
-        }
-        if (typeof this._FocusWarningBar !== 'undefined') {
-            this._FocusWarningBar.style.width = NewWidth - 10 + 'px';
-        }
-        if (typeof this._ScrollbackBar !== 'undefined') {
-            this._ScrollbackBar.style.width = NewWidth - 10 + 'px';
-        }
-        if (typeof this._StatusBar !== 'undefined') {
-            this._StatusBar.style.width = NewWidth - 10 + 'px';
-        }
-        if ((document.getElementById('fTelnetScript') !== null) && (document.getElementById('fTelnetKeyboardCss') !== null)) {
-            var KeyboardSizes = [960, 800, 720, 640, 560, 480, 360, 320];
-            for (var i = 0; i < KeyboardSizes.length; i++) {
-                if (((NewWidth >= KeyboardSizes[i]) && (KeyboardSizes[i] <= screen.width)) || (i === (KeyboardSizes.length - 1))) {
-                    document.getElementById('fTelnetKeyboardCss').href = StringUtils.GetUrl('keyboard/keyboard-' + KeyboardSizes[i].toString(10) + '.min.css');
-                    break;
-                }
-            }
-        }
-    };
-    fTelnetClient.prototype.OnDownloadComplete = function () {
-        var _this = this;
-        this._Timer = setInterval(function () { _this.OnTimer(); }, 250);
-    };
-    fTelnetClient.prototype.OnMenuButtonClick = function () {
-        this._MenuButtons.style.display = (this._MenuButtons.style.display === 'none') ? 'block' : 'none';
-        this._MenuButtons.style.left = Offset.getOffset(this._MenuButton).x + this._MenuButton.clientWidth + 'px';
-        this._MenuButtons.style.top = Offset.getOffset(this._MenuButton).y - this._MenuButtons.clientHeight + 'px';
-    };
-    fTelnetClient.prototype.OnTimer = function () {
-        if ((typeof this._Connection !== 'undefined') && (this._Connection.connected)) {
-            if (document.hasFocus() && !this._HasFocus) {
-                this._HasFocus = true;
-                this._FocusWarningBar.style.display = 'none';
-            }
-            else if (!document.hasFocus() && this._HasFocus) {
-                this._HasFocus = false;
-                this._FocusWarningBar.style.display = 'block';
-            }
-        }
-        else {
-            if (this._FocusWarningBar.style.display === 'block') {
-                this._FocusWarningBar.style.display = 'none';
-            }
-        }
-        if (this._UseModernScrollback) {
-            var ScrolledUp = (this._ClientContainer.scrollHeight - this._ClientContainer.scrollTop - this._ClientContainer.clientHeight > 1);
-            if (ScrolledUp && (this._ScrollbackBar.style.display === 'none')) {
-                this._ScrollbackBar.style.display = 'block';
-            }
-            else if (!ScrolledUp && (this._ScrollbackBar.style.display === 'block')) {
-                this._ScrollbackBar.style.display = 'none';
-            }
-        }
-    };
-    fTelnetClient.prototype.OnUploadComplete = function () {
-        var _this = this;
-        this._Timer = setInterval(function () { _this.OnTimer(); }, 250);
-    };
-    fTelnetClient.prototype.OnUploadFileSelected = function () {
-        var _this = this;
-        if (typeof this._Connection === 'undefined') {
-            return;
-        }
-        if (!this._Connection.connected) {
-            return;
-        }
-        this._YModemSend = new YModemSend(this._Crt, this._Connection);
-        if (typeof this._Timer !== 'undefined') {
-            clearInterval(this._Timer);
-            delete this._Timer;
-        }
-        this._YModemSend.ontransfercomplete.on(function () { _this.OnUploadComplete(); });
-        if (this._UploadInput.files !== null) {
-            for (var i = 0; i < this._UploadInput.files.length; i++) {
-                this.UploadFile(this._UploadInput.files[i], this._UploadInput.files.length);
-            }
-        }
-    };
-    fTelnetClient.prototype.StuffInputBuffer = function (text) {
-        for (var i = 0; i < text.length; i++) {
-            this._Crt.PushKeyPress(text.charCodeAt(i), 0, false, false, false);
-        }
-    };
-    fTelnetClient.prototype.Upload = function () {
-        if (typeof this._MenuButtons !== 'undefined') {
-            this._MenuButtons.style.display = 'none';
-        }
-        if (typeof this._Connection === 'undefined') {
-            return;
-        }
-        if (!this._Connection.connected) {
-            return;
-        }
-        this._UploadInput.click();
-    };
-    fTelnetClient.prototype.UploadFile = function (file, fileCount) {
-        var _this = this;
-        var reader = new FileReader();
-        reader.onload = function () {
-            var FR = new FileRecord(file.name, file.size);
-            var Buffer = reader.result;
-            var Bytes = new Uint8Array(Buffer);
-            for (var i = 0; i < Bytes.length; i++) {
-                FR.data.writeByte(Bytes[i]);
-            }
-            FR.data.position = 0;
-            _this._YModemSend.Upload(FR, fileCount);
-        };
-        reader.readAsArrayBuffer(file);
-    };
-    Object.defineProperty(fTelnetClient.prototype, "VirtualKeyboardVibrateDuration", {
-        get: function () {
-            return this._Options.VirtualKeyboardVibrateDuration;
-        },
-        set: function (value) {
-            this._Options.VirtualKeyboardVibrateDuration = value;
-            this._VirtualKeyboard.VibrateDurationInMilliseconds = value;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(fTelnetClient.prototype, "VirtualKeyboardVisible", {
-        get: function () {
-            return this._Options.VirtualKeyboardVisible;
-        },
-        set: function (value) {
-            if (typeof this._MenuButtons !== 'undefined') {
-                this._MenuButtons.style.display = 'none';
-            }
-            this._Options.VirtualKeyboardVisible = value;
-            this._VirtualKeyboard.Visible = value;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return fTelnetClient;
-}());
+//# sourceMappingURL=graph.js.map
 var VirtualKeyboard = (function () {
     function VirtualKeyboard(crt, container) {
         var _this = this;
@@ -10366,3 +9604,900 @@ var VirtualKeyboard = (function () {
     });
     return VirtualKeyboard;
 }());
+var fTelnetClient = (function () {
+    function fTelnetClient(containerId, options) {
+        var _this = this;
+        this.ondata = new TypedEvent();
+        this._HasFocus = true;
+        this._LastTimer = 0;
+        this._LoadingProxySettings = 0;
+        this._UseModernScrollback = false;
+        if (typeof options === 'undefined') {
+            var Message = 'fTelnet Error: The options parameter is required (pass in an fTelnetOptions object)';
+            alert(Message);
+            throw new Error(Message);
+        }
+        else {
+            this._Options = options;
+            if ((this._Options.Emulation === 'RIP') && (typeof RIP !== 'undefined')) {
+                this._Options.Font = 'RIP_8x8';
+                this._Options.ScreenRows = 43;
+            }
+            else {
+                this._Options.Emulation = 'ansi-bbs';
+            }
+            this.LoadProxySettings();
+        }
+        if (typeof containerId === 'string') {
+            var Container = document.getElementById(containerId);
+            if (Container === null) {
+                var Message = 'fTelnet Error: fTelnet constructor was passed an invalid container id';
+                alert(Message);
+                throw new Error(Message);
+            }
+            else {
+                this._fTelnetContainer = Container;
+            }
+        }
+        else {
+            var Message = 'fTelnet Error: fTelnet constructor was passed an invalid container id';
+            alert(Message);
+            throw new Error(Message);
+        }
+        if (document.getElementById('fTelnetScript') === null) {
+            var Message = 'fTelnet Error: Script element with id="fTelnetScript" was not found';
+            alert(Message);
+            throw new Error(Message);
+        }
+        if (document.getElementById('fTelnetCss') === null) {
+            var link = document.createElement('link');
+            link.id = 'fTelnetCss';
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = StringUtils.GetUrl('ftelnet.css');
+            document.getElementsByTagName('head')[0].appendChild(link);
+        }
+        if (document.getElementById('fTelnetKeyboardCss') === null) {
+            var link = document.createElement('link');
+            link.id = 'fTelnetKeyboardCss';
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = '';
+            document.getElementsByTagName('head')[0].appendChild(link);
+        }
+        this._InitMessageBar = document.createElement('div');
+        this._InitMessageBar.className = 'fTelnetInitMessage';
+        this._InitMessageBar.innerHTML = 'Initializing fTelnet...';
+        this._fTelnetContainer.appendChild(this._InitMessageBar);
+        this._ClientContainer = document.createElement('div');
+        this._ClientContainer.className = 'fTelnetClientContainer';
+        this._fTelnetContainer.appendChild(this._ClientContainer);
+        this._UseModernScrollback = (this._Options.AllowModernScrollback && DetectMobileBrowser.SupportsModernScrollback && (this._Options.Emulation !== 'RIP'));
+        if (this._UseModernScrollback) {
+            this._ClientContainer.style.overflowX = 'hidden';
+            this._ClientContainer.style.overflowY = 'scroll';
+            this._ClientContainer.style.height = this._Options.ScreenRows * 16 + 'px';
+            this._ClientContainer.style.width = (this._Options.ScreenColumns * 9) + GetScrollbarWidth.Width + 'px';
+            this._ClientContainer.scrollTop = this._ClientContainer.scrollHeight;
+        }
+        this._Crt = new Crt(this._ClientContainer, this._UseModernScrollback);
+        this._InitMessageBar.style.display = 'none';
+        this._Crt.onfontchange.on(function () { _this.OnCrtScreenSizeChanged(); });
+        this._Crt.onkeypressed.on(function () { _this.OnCrtKeyPressed(); });
+        this._Crt.onscreensizechange.on(function () { _this.OnCrtScreenSizeChanged(); });
+        this._Crt.BareLFtoCRLF = this._Options.BareLFtoCRLF;
+        this._Crt.LocalEcho = this._Options.LocalEcho;
+        this._Crt.SkipRedrawWhenSameFontSize = this._Options.SkipRedrawWhenSameFontSize;
+        this._Crt.SetFont(this._Options.Font);
+        this._Crt.SetScreenSize(this._Options.ScreenColumns, this._Options.ScreenRows);
+        this._Ansi = new Ansi(this._Crt);
+        this._Ansi.onesc0c.on(function () { _this.OnAnsiESC0c(); });
+        this._Ansi.onesc5n.on(function () { _this.OnAnsiESC5n(); });
+        this._Ansi.onesc6n.on(function () { _this.OnAnsiESC6n(); });
+        this._Ansi.onesc255n.on(function () { _this.OnAnsiESC255n(); });
+        this._Ansi.onescQ.on(function (font) { _this.OnAnsiESCQ(font); });
+        this._Ansi.onripdetect.on(function () { _this.OnAnsiRIPDetect(); });
+        this._Ansi.onripdisable.on(function () { _this.OnAnsiRIPDisable(); });
+        this._Ansi.onripenable.on(function () { _this.OnAnsiRIPEnable(); });
+        if (this._Options.Emulation === 'RIP') {
+            this._RIP = new RIP(this._Crt, this._Ansi, this._ClientContainer);
+        }
+        if (!('WebSocket' in window) || navigator.userAgent.match('AppleWebKit/534.30')) {
+            this._Crt.WriteLn();
+            this._Crt.WriteLn('Sorry, but your browser doesn\'t support the WebSocket protocol!');
+            this._Crt.WriteLn();
+            this._Crt.WriteLn('WebSockets are how fTelnet connects to the remote server, so without them that');
+            this._Crt.WriteLn('means you won\'t be able to connect anywhere.');
+            this._Crt.WriteLn();
+            this._Crt.WriteLn('If you can, try upgrading your web browser.  If that\'s not an option (ie you\'re');
+            this._Crt.WriteLn('already running the latest version your platform supports, like IE 8 on');
+            this._Crt.WriteLn('Windows XP), then try switching to a different web browser.');
+            this._Crt.WriteLn();
+            this._Crt.WriteLn('Feel free to contact me (http://www.ftelnet.ca/contact/) if you think you\'re');
+            this._Crt.WriteLn('seeing this message in error, and I\'ll look into it.  Be sure to let me know');
+            this._Crt.WriteLn('what browser you use, as well as which version it is.');
+            console.log('fTelnet Error: WebSocket not supported');
+        }
+        this._FocusWarningBar = document.createElement('div');
+        this._FocusWarningBar.className = 'fTelnetFocusWarning';
+        this._FocusWarningBar.innerHTML = '*** CLICK HERE TO ENABLE KEYBOARD INPUT ***';
+        this._FocusWarningBar.style.display = 'none';
+        this._fTelnetContainer.appendChild(this._FocusWarningBar);
+        this._ScrollbackBar = document.createElement('div');
+        this._ScrollbackBar.className = 'fTelnetScrollback';
+        if (this._UseModernScrollback) {
+            this._ScrollbackBar.innerHTML = 'SCROLLBACK: Scroll back down to the bottom to exit scrollback mode';
+        }
+        else {
+            var ScrollbackLabel = document.createElement('span');
+            ScrollbackLabel.innerHTML = 'SCROLLBACK:';
+            this._ScrollbackBar.appendChild(ScrollbackLabel);
+            var ScrollbackLineUp = document.createElement('a');
+            ScrollbackLineUp.href = '#';
+            ScrollbackLineUp.innerHTML = 'Line Up';
+            ScrollbackLineUp.addEventListener('click', function (e) { _this._Crt.PushKeyDown(KeyboardKeys.UP, KeyboardKeys.UP, false, false, false); e.preventDefault(); return false; });
+            this._ScrollbackBar.appendChild(ScrollbackLineUp);
+            var ScrollbackLineDown = document.createElement('a');
+            ScrollbackLineDown.href = '#';
+            ScrollbackLineDown.innerHTML = 'Line Down';
+            ScrollbackLineDown.addEventListener('click', function (e) { _this._Crt.PushKeyDown(KeyboardKeys.DOWN, KeyboardKeys.DOWN, false, false, false); e.preventDefault(); return false; });
+            this._ScrollbackBar.appendChild(ScrollbackLineDown);
+            var ScrollbackPageUp = document.createElement('a');
+            ScrollbackPageUp.href = '#';
+            ScrollbackPageUp.innerHTML = 'Page Up';
+            ScrollbackPageUp.addEventListener('click', function (e) { _this._Crt.PushKeyDown(KeyboardKeys.PAGE_UP, KeyboardKeys.PAGE_UP, false, false, false); e.preventDefault(); return false; });
+            this._ScrollbackBar.appendChild(ScrollbackPageUp);
+            var ScrollbackPageDown = document.createElement('a');
+            ScrollbackPageDown.href = '#';
+            ScrollbackPageDown.innerHTML = 'Page Down';
+            ScrollbackPageDown.addEventListener('click', function (e) { _this._Crt.PushKeyDown(KeyboardKeys.PAGE_DOWN, KeyboardKeys.PAGE_DOWN, false, false, false); e.preventDefault(); return false; });
+            this._ScrollbackBar.appendChild(ScrollbackPageDown);
+            var ScrollbackExit = document.createElement('a');
+            ScrollbackExit.href = '#';
+            ScrollbackExit.innerHTML = 'Exit';
+            ScrollbackExit.addEventListener('click', function (e) { _this.ExitScrollback(); e.preventDefault(); return false; });
+            this._ScrollbackBar.appendChild(ScrollbackExit);
+        }
+        this._ScrollbackBar.style.display = 'none';
+        this._fTelnetContainer.appendChild(this._ScrollbackBar);
+        this._StatusBar = document.createElement('div');
+        this._StatusBar.className = 'fTelnetStatusBar';
+        this._fTelnetContainer.appendChild(this._StatusBar);
+        this._MenuButton = document.createElement('a');
+        this._MenuButton.className = 'fTelnetMenuButton';
+        this._MenuButton.href = '#';
+        this._MenuButton.innerHTML = 'Menu';
+        this._MenuButton.addEventListener('click', function (e) { _this.OnMenuButtonClick(); e.preventDefault(); return false; }, false);
+        this._StatusBar.appendChild(this._MenuButton);
+        this._ConnectButton = document.createElement('a');
+        this._ConnectButton.className = 'fTelnetConnectButton';
+        this._ConnectButton.href = '#';
+        this._ConnectButton.innerHTML = 'Connect';
+        this._ConnectButton.addEventListener('click', function (e) { _this.Connect(); e.preventDefault(); return false; }, false);
+        this._StatusBar.appendChild(this._ConnectButton);
+        this._StatusBarLabel = document.createElement('span');
+        this._StatusBarLabel.className = 'fTelnetStatusBarLabel';
+        this._StatusBarLabel.innerHTML = 'Not connected';
+        this._StatusBar.appendChild(this._StatusBarLabel);
+        this._MenuButtons = document.createElement('div');
+        this._MenuButtons.className = 'fTelnetMenuButtons';
+        var MenuButtonsTable = document.createElement('table');
+        var MenuButtonsRow1 = document.createElement('tr');
+        var MenuButtonsRow1Cell1 = document.createElement('td');
+        var MenuButtonsConnect = document.createElement('a');
+        MenuButtonsConnect.href = '#';
+        MenuButtonsConnect.innerHTML = 'Connect';
+        MenuButtonsConnect.addEventListener('click', function (me) { _this.Connect(); me.preventDefault(); return false; });
+        MenuButtonsRow1Cell1.appendChild(MenuButtonsConnect);
+        MenuButtonsRow1.appendChild(MenuButtonsRow1Cell1);
+        var MenuButtonsRow1Cell2 = document.createElement('td');
+        var MenuButtonsDisconnect = document.createElement('a');
+        MenuButtonsDisconnect.href = '#';
+        MenuButtonsDisconnect.innerHTML = 'Disconnect';
+        MenuButtonsDisconnect.addEventListener('click', function (me) { _this.Disconnect(true); me.preventDefault(); return false; });
+        MenuButtonsRow1Cell2.appendChild(MenuButtonsDisconnect);
+        MenuButtonsRow1.appendChild(MenuButtonsRow1Cell2);
+        MenuButtonsTable.appendChild(MenuButtonsRow1);
+        if (!DetectMobileBrowser.IsMobile) {
+            var MenuButtonsRow2 = document.createElement('tr');
+            var MenuButtonsRow2Cell1 = document.createElement('td');
+            var MenuButtonsCopy = document.createElement('a');
+            MenuButtonsCopy.href = '#';
+            MenuButtonsCopy.innerHTML = 'Copy';
+            MenuButtonsCopy.addEventListener('click', function (me) { _this.ClipboardCopy(); me.preventDefault(); return false; });
+            MenuButtonsRow2Cell1.appendChild(MenuButtonsCopy);
+            MenuButtonsRow2.appendChild(MenuButtonsRow2Cell1);
+            var MenuButtonsRow2Cell2 = document.createElement('td');
+            var MenuButtonsPaste = document.createElement('a');
+            MenuButtonsPaste.href = '#';
+            MenuButtonsPaste.innerHTML = 'Paste';
+            MenuButtonsPaste.addEventListener('click', function (me) { _this.ClipboardPaste(); me.preventDefault(); return false; });
+            MenuButtonsRow2Cell2.appendChild(MenuButtonsPaste);
+            MenuButtonsRow2.appendChild(MenuButtonsRow2Cell2);
+            MenuButtonsTable.appendChild(MenuButtonsRow2);
+        }
+        if ((typeof YModemReceive !== 'undefined') && (typeof YModemSend !== 'undefined')) {
+            var MenuButtonsRow3 = document.createElement('tr');
+            var MenuButtonsRow3Cell1 = document.createElement('td');
+            var MenuButtonsUpload = document.createElement('a');
+            MenuButtonsUpload.href = '#';
+            MenuButtonsUpload.innerHTML = 'Upload';
+            MenuButtonsUpload.addEventListener('click', function (me) { _this.Upload(); me.preventDefault(); return false; });
+            MenuButtonsRow3Cell1.appendChild(MenuButtonsUpload);
+            MenuButtonsRow3.appendChild(MenuButtonsRow3Cell1);
+            var MenuButtonsRow3Cell2 = document.createElement('td');
+            var MenuButtonsDownload = document.createElement('a');
+            MenuButtonsDownload.href = '#';
+            MenuButtonsDownload.innerHTML = 'Download';
+            MenuButtonsDownload.addEventListener('click', function (me) { _this.Download(); me.preventDefault(); return false; });
+            MenuButtonsRow3Cell2.appendChild(MenuButtonsDownload);
+            MenuButtonsRow3.appendChild(MenuButtonsRow3Cell2);
+            MenuButtonsTable.appendChild(MenuButtonsRow3);
+        }
+        if (!window.cordova) {
+            var MenuButtonsRow4 = document.createElement('tr');
+            var MenuButtonsRow4Cell1 = document.createElement('td');
+            var MenuButtonsKeyboard = document.createElement('a');
+            MenuButtonsKeyboard.href = '#';
+            MenuButtonsKeyboard.innerHTML = 'Keyboard';
+            MenuButtonsKeyboard.addEventListener('click', function (me) { _this.VirtualKeyboardVisible = !_this.VirtualKeyboardVisible; me.preventDefault(); return false; });
+            MenuButtonsRow4Cell1.appendChild(MenuButtonsKeyboard);
+            MenuButtonsRow4.appendChild(MenuButtonsRow4Cell1);
+            var MenuButtonsRow4Cell2 = document.createElement('td');
+            var MenuButtonsFullScreen = document.createElement('a');
+            MenuButtonsFullScreen.href = '#';
+            MenuButtonsFullScreen.innerHTML = 'Full&nbsp;Screen';
+            MenuButtonsFullScreen.addEventListener('click', function (me) { _this.FullScreenToggle(); me.preventDefault(); return false; });
+            MenuButtonsRow4Cell2.appendChild(MenuButtonsFullScreen);
+            MenuButtonsRow4.appendChild(MenuButtonsRow4Cell2);
+            MenuButtonsTable.appendChild(MenuButtonsRow4);
+        }
+        if (!this._UseModernScrollback) {
+            var MenuButtonsRow5 = document.createElement('tr');
+            var MenuButtonsRow5Cell1 = document.createElement('td');
+            MenuButtonsRow5Cell1.colSpan = 2;
+            var MenuButtonsScrollback = document.createElement('a');
+            MenuButtonsScrollback.href = '#';
+            MenuButtonsScrollback.innerHTML = 'View Scrollback Buffer';
+            MenuButtonsScrollback.addEventListener('click', function (me) { _this.EnterScrollback(); me.preventDefault(); return false; });
+            MenuButtonsRow5Cell1.appendChild(MenuButtonsScrollback);
+            MenuButtonsRow5.appendChild(MenuButtonsRow5Cell1);
+            MenuButtonsTable.appendChild(MenuButtonsRow5);
+        }
+        this._MenuButtons.appendChild(MenuButtonsTable);
+        this._MenuButtons.style.display = 'none';
+        this._MenuButtons.style.zIndex = '150';
+        this._fTelnetContainer.appendChild(this._MenuButtons);
+        this._VirtualKeyboard = new VirtualKeyboard(this._Crt, this._fTelnetContainer);
+        this._VirtualKeyboard.VibrateDurationInMilliseconds = this._Options.VirtualKeyboardVibrateDuration;
+        this._VirtualKeyboard.Visible = this._Options.VirtualKeyboardVisible;
+        this.OnCrtScreenSizeChanged();
+        if (this._Options.Emulation === 'RIP') {
+            if (this._Options.SplashScreen === '') {
+                this._RIP.Parse(atob('G1swbRtbMkobWzA7MEgbWzE7NDQ7MzRt2sTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTEG1swOzQ0OzMwbb8bWzBtDQobWzE7NDQ7MzRtsyAgG1szN21XZWxjb21lISAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAbWzA7NDQ7MzBtsxtbMG0NChtbMTs0NDszNG3AG1swOzQ0OzMwbcTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTE2RtbMG0NCg0KG1sxbSAbWzBtIBtbMTs0NDszNG3axMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMQbWzA7NDQ7MzBtvxtbMG0NCiAgG1sxOzQ0OzM0bbMbWzA7MzRt29vb2xtbMzBt29vb29vb29vb29vb29vb29vb29vb2xtbMzRt29vb29vbG1s0NDszMG2zG1swbQ0KICAbWzE7NDQ7MzRtsxtbMDszNG3b29vbG1sxOzMwbdvb29vb29vb29vb29vb29vb29vb29sbWzA7MzBt29sbWzM0bdvb29sbWzQ0OzMwbbMbWzBtDQogIBtbMTs0NDszNG2zG1swOzM0bdvb29sbWzE7MzBt29vb2xtbMG3b29vb29vb29vb29sbWzFt29vb2xtbMzBt29sbWzA7MzBt29sbWzM0bdvb29sbWzQ0OzMwbbMbWzBtDQogIBtbMTs0NDszNG2zG1swOzM0bdvb29sbWzE7MzBt29vb2xtbMG3b29vb29vb29vbG1sxbdvb29sbWzBt29sbWzE7MzBt29sbWzA7MzBt29sbWzM0bdvb29sbWzQ0OzMwbbMbWzBtDQogIBtbMTs0NDszNG2zG1swOzM0bdvb29sbWzE7MzBt29vb2xtbMG3b29vb29vb2xtbMW3b29vbG1swbdvbG1sxbdvbG1szMG3b2xtbMDszMG3b2xtbMzRt29vb2xtbNDQ7MzBtsxtbMG0NCiAgG1sxOzQ0OzM0bbMbWzA7MzRt29vb2xtbMTszMG3b29vbG1swbdvb29vb2xtbMW3b29vbG1swbdvbG1sxbdvb29sbWzMwbdvbG1swOzMwbdvbG1szNG3b29vbG1s0NDszMG2zG1swbQ0KICAbWzE7NDQ7MzRtsxtbMDszNG3b29vbG1sxOzMwbdvb29sbWzBt29vb2xtbMW3b29vbG1swbdvbG1sxbdvb29vb2xtbMzBt29sbWzA7MzBt29sbWzM0bdvb29sbWzQ0OzMwbbMbWzQwOzM3bQ0KICAbWzE7NDQ7MzRtsxtbMDszNG3b29vbG1sxOzMwbdvbG1swOzMwbdvbG1sxbdvb29vb29vb29vb29vb29vb2xtbMDszMG3b2xtbMzRt29vb2xtbNDQ7MzBtsxtbNDA7MzdtDQogIBtbMTs0NDszNG2zG1swOzM0bdvb29sbWzE7MzBt29sbWzBt29vb29vb29vb29vb29vb29vb29sbWzMwbdvbG1szNG3b29vbG1s0NDszMG2zG1s0MDszN20NCiAgG1sxOzQ0OzM0bbMbWzA7MzBt29vb29vb29vb29vb29vb29vb29vb29vb29vb29vbG1szNG3b2xtbNDQ7MzBtsxtbNDA7MzdtDQogIBtbMTs0NDszNG2zG1s0MDszMG3b2xtbMG3b29vb29vb29vb29vb29vb29vb29vb29vb29vbG1szMG3b2xtbNDRtsxtbNDA7MzdtIBtbMzRtIBtbMTs0NzszN23axMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMQbWzMwbb8bWzBtDQogIBtbMTs0NDszNG2zG1swOzMwbdvbG1sxbdvb29vb29vb29vb29vb29sbWzA7MzBt29vb29vb29vb2xtbMW3b2xtbMDszMG3b2xtbNDRtsxtbNDA7MzdtIBtbMzRtIBtbMTs0NzszN22zICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAbWzMwbbMbWzBtDQogIBtbMTs0NDszNG2zG1s0MDszMG3b2xtbMG3b29vb29vb29vb29vb29vb29vb29vb29vb29vbG1szMG3b2xtbNDRtsxtbMG0gG1szNG0gG1sxOzQ3OzM3bbMgICAbWzM0bWZUZWxuZXQgLS0gVGVsbmV0IGZvciB0aGUgV2ViICAgICAgG1szMG2zG1swbQ0KG1sxbSAbWzBtIBtbMTs0NDszNG2zG1swOzMwbdvbG1sxbdvb29vb29vb29vb29vb29vb29vb29vb2xtbMDszMG3b29vb29sbWzQ0bbMbWzBtIBtbMzRtIBtbMTs0NzszN22zICAgICAbWzA7NDc7MzRtV2ViIGJhc2VkIEJCUyB0ZXJtaW5hbCBjbGllbnQgICAgG1sxOzMwbbMbWzBtDQogIBtbMTs0NDszNG2zG1swOzM0bdvbG1szMG3b29vb29vb29vb29vb29vb29vb29vb29vb29vbG1szNG3b2xtbNDQ7MzBtsxtbMG0gG1szNG0gG1sxOzQ3OzM3bbMgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIBtbMzBtsxtbMG0NCiAgG1sxOzQ0OzM0bcAbWzA7NDQ7MzBtxMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTZG1swbSAbWzM0bSAbWzE7NDc7MzdtwBtbMzBtxMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTZG1swbQ0KDQobWzExQxtbMTszMm1Db3B5cmlnaHQgKEMpIDIwMDkt'));
+                this._RIP.Parse(new Date().getFullYear().toString());
+                this._RIP.Parse(atob('IFImTSBTb2Z0d2FyZS4gIEFsbCBSaWdodHMgUmVzZXJ2ZWQNChtbMDszNG3ExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTE'));
+            }
+            else {
+                this._RIP.Parse(atob(this._Options.SplashScreen));
+            }
+        }
+        else {
+            if (this._Options.SplashScreen === '') {
+                this._Ansi.Write(atob('G1swbRtbMkobWzA7MEgbWzE7NDQ7MzRt2sTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTEG1swOzQ0OzMwbb8bWzBtDQobWzE7NDQ7MzRtsyAgG1szN21XZWxjb21lISAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAbWzA7NDQ7MzBtsxtbMG0NChtbMTs0NDszNG3AG1swOzQ0OzMwbcTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTE2RtbMG0NCg0KG1sxbSAbWzBtIBtbMTs0NDszNG3axMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMQbWzA7NDQ7MzBtvxtbMG0NCiAgG1sxOzQ0OzM0bbMbWzA7MzRt29vb2xtbMzBt29vb29vb29vb29vb29vb29vb29vb2xtbMzRt29vb29vbG1s0NDszMG2zG1swbQ0KICAbWzE7NDQ7MzRtsxtbMDszNG3b29vbG1sxOzMwbdvb29vb29vb29vb29vb29vb29vb29sbWzA7MzBt29sbWzM0bdvb29sbWzQ0OzMwbbMbWzBtDQogIBtbMTs0NDszNG2zG1swOzM0bdvb29sbWzE7MzBt29vb2xtbMG3b29vb29vb29vb29sbWzFt29vb2xtbMzBt29sbWzA7MzBt29sbWzM0bdvb29sbWzQ0OzMwbbMbWzBtDQogIBtbMTs0NDszNG2zG1swOzM0bdvb29sbWzE7MzBt29vb2xtbMG3b29vb29vb29vbG1sxbdvb29sbWzBt29sbWzE7MzBt29sbWzA7MzBt29sbWzM0bdvb29sbWzQ0OzMwbbMbWzBtDQogIBtbMTs0NDszNG2zG1swOzM0bdvb29sbWzE7MzBt29vb2xtbMG3b29vb29vb2xtbMW3b29vbG1swbdvbG1sxbdvbG1szMG3b2xtbMDszMG3b2xtbMzRt29vb2xtbNDQ7MzBtsxtbMG0NCiAgG1sxOzQ0OzM0bbMbWzA7MzRt29vb2xtbMTszMG3b29vbG1swbdvb29vb2xtbMW3b29vbG1swbdvbG1sxbdvb29sbWzMwbdvbG1swOzMwbdvbG1szNG3b29vbG1s0NDszMG2zG1swbQ0KICAbWzE7NDQ7MzRtsxtbMDszNG3b29vbG1sxOzMwbdvb29sbWzBt29vb2xtbMW3b29vbG1swbdvbG1sxbdvb29vb2xtbMzBt29sbWzA7MzBt29sbWzM0bdvb29sbWzQ0OzMwbbMbWzQwOzM3bQ0KICAbWzE7NDQ7MzRtsxtbMDszNG3b29vbG1sxOzMwbdvbG1swOzMwbdvbG1sxbdvb29vb29vb29vb29vb29vb2xtbMDszMG3b2xtbMzRt29vb2xtbNDQ7MzBtsxtbNDA7MzdtDQogIBtbMTs0NDszNG2zG1swOzM0bdvb29sbWzE7MzBt29sbWzBt29vb29vb29vb29vb29vb29vb29sbWzMwbdvbG1szNG3b29vbG1s0NDszMG2zG1s0MDszN20NCiAgG1sxOzQ0OzM0bbMbWzA7MzBt29vb29vb29vb29vb29vb29vb29vb29vb29vb29vbG1szNG3b2xtbNDQ7MzBtsxtbNDA7MzdtDQogIBtbMTs0NDszNG2zG1s0MDszMG3b2xtbMG3b29vb29vb29vb29vb29vb29vb29vb29vb29vbG1szMG3b2xtbNDRtsxtbNDA7MzdtIBtbMzRtIBtbMTs0NzszN23axMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMQbWzMwbb8bWzBtDQogIBtbMTs0NDszNG2zG1swOzMwbdvbG1sxbdvb29vb29vb29vb29vb29sbWzA7MzBt29vb29vb29vb2xtbMW3b2xtbMDszMG3b2xtbNDRtsxtbNDA7MzdtIBtbMzRtIBtbMTs0NzszN22zICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAbWzMwbbMbWzBtDQogIBtbMTs0NDszNG2zG1s0MDszMG3b2xtbMG3b29vb29vb29vb29vb29vb29vb29vb29vb29vbG1szMG3b2xtbNDRtsxtbMG0gG1szNG0gG1sxOzQ3OzM3bbMgICAbWzM0bWZUZWxuZXQgLS0gVGVsbmV0IGZvciB0aGUgV2ViICAgICAgG1szMG2zG1swbQ0KG1sxbSAbWzBtIBtbMTs0NDszNG2zG1swOzMwbdvbG1sxbdvb29vb29vb29vb29vb29vb29vb29vb2xtbMDszMG3b29vb29sbWzQ0bbMbWzBtIBtbMzRtIBtbMTs0NzszN22zICAgICAbWzA7NDc7MzRtV2ViIGJhc2VkIEJCUyB0ZXJtaW5hbCBjbGllbnQgICAgG1sxOzMwbbMbWzBtDQogIBtbMTs0NDszNG2zG1swOzM0bdvbG1szMG3b29vb29vb29vb29vb29vb29vb29vb29vb29vbG1szNG3b2xtbNDQ7MzBtsxtbMG0gG1szNG0gG1sxOzQ3OzM3bbMgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIBtbMzBtsxtbMG0NCiAgG1sxOzQ0OzM0bcAbWzA7NDQ7MzBtxMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTZG1swbSAbWzM0bSAbWzE7NDc7MzdtwBtbMzBtxMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTZG1swbQ0KDQobWzExQxtbMTszMm0bWzE7MjU1OzE3ODsxMjd0Q29weXJpZ2h0IChDKSAyMDA5LQ=='));
+                this._Ansi.Write(new Date().getFullYear().toString());
+                this._Ansi.Write(atob('IFImTSBTb2Z0d2FyZS4gIEFsbCBSaWdodHMgUmVzZXJ2ZWQNChtbMDszNG3ExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTE'));
+            }
+            else {
+                this._Ansi.Write(atob(this._Options.SplashScreen));
+            }
+        }
+        this._Timer = setInterval(function () { _this.OnTimer(); }, 250);
+        this._UploadInput = document.createElement('input');
+        this._UploadInput.type = 'file';
+        this._UploadInput.className = 'fTelnetUpload';
+        this._UploadInput.onchange = function () { _this.OnUploadFileSelected(); };
+        this._UploadInput.style.display = 'none';
+        this._fTelnetContainer.appendChild(this._UploadInput);
+    }
+    fTelnetClient.prototype.ClipboardCopy = function () {
+        if (typeof this._MenuButtons !== 'undefined') {
+            this._MenuButtons.style.display = 'none';
+        }
+        alert('Click and drag your mouse over the text you want to copy');
+    };
+    fTelnetClient.prototype.ClipboardPaste = function () {
+        if (typeof this._MenuButtons !== 'undefined') {
+            this._MenuButtons.style.display = 'none';
+        }
+        if (typeof this._Connection === 'undefined') {
+            return;
+        }
+        if (!this._Connection.connected) {
+            return;
+        }
+        var Text = ClipboardHelper.GetData();
+        for (var i = 0; i < Text.length; i++) {
+            var B = Text.charCodeAt(i);
+            if ((B === 13) || (B === 32)) {
+                this._Crt.PushKeyDown(0, B, false, false, false);
+            }
+            else if ((B >= 33) && (B <= 126)) {
+                this._Crt.PushKeyPress(B, 0, false, false, false);
+            }
+        }
+    };
+    fTelnetClient.prototype.Connect = function () {
+        var _this = this;
+        if (this._LoadingProxySettings > 0) {
+            console.log('waiting for proxy-servers.json');
+            setTimeout(function () { _this.Connect(); }, 100);
+            this._LoadingProxySettings -= 1;
+            return;
+        }
+        if (typeof this._MenuButtons !== 'undefined') {
+            this._MenuButtons.style.display = 'none';
+        }
+        if ((typeof this._Connection !== 'undefined') && (this._Connection.connected)) {
+            return;
+        }
+        switch (this._Options.ConnectionType) {
+            case 'rlogin':
+                this._Connection = new RLoginConnection();
+                break;
+            case 'tcp':
+                this._Connection = new WebSocketConnection();
+                break;
+            default:
+                this._Connection = new TelnetConnection(this._Crt);
+                this._Connection.LocalEcho = this._Options.LocalEcho;
+                this._Connection.onlocalecho.on(function (value) { _this.OnConnectionLocalEcho(value); });
+                this._Connection.SendLocation = this._Options.SendLocation;
+                break;
+        }
+        this._Connection.onclose.on(function () { _this.OnConnectionClose(); });
+        this._Connection.onconnect.on(function () { _this.OnConnectionConnect(); });
+        this._Connection.ondata.on(function () { _this.OnConnectionData(); });
+        this._Connection.onioerror.on(function () { _this.OnConnectionIOError(); });
+        this._Connection.onsecurityerror.on(function () { _this.OnConnectionSecurityError(); });
+        if (this._Options.Emulation === 'RIP') {
+            this._RIP.ResetWindows();
+        }
+        else {
+            this._Crt.NormVideo();
+            this._Crt.ClrScr();
+        }
+        if (this._Options.ProxyHostname === '') {
+            this._ConnectButton.style.display = 'none';
+            this._StatusBarLabel.innerHTML = 'Connecting to ' + this._Options.Hostname + ':' + this._Options.Port;
+            this._StatusBar.style.backgroundColor = 'blue';
+            this._ClientContainer.style.opacity = '1.0';
+            this._Connection.connect(this._Options.Hostname, this._Options.Port, this._Options.WebSocketUrlPath, this._Options.ForceWss);
+        }
+        else {
+            this._ConnectButton.style.display = 'none';
+            this._StatusBarLabel.innerHTML = 'Connecting to ' + this._Options.Hostname + ':' + this._Options.Port + ' via ' + this._Options.ProxyHostname;
+            this._StatusBar.style.backgroundColor = 'blue';
+            this._ClientContainer.style.opacity = '1.0';
+            this._Connection.connect(this._Options.Hostname, this._Options.Port, '', this._Options.ForceWss, this._Options.ProxyHostname, this._Options.ProxyPort, this._Options.ProxyPortSecure);
+        }
+    };
+    Object.defineProperty(fTelnetClient.prototype, "Connected", {
+        get: function () {
+            if (typeof this._Connection === 'undefined') {
+                return false;
+            }
+            return this._Connection.connected;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(fTelnetClient.prototype, "Connection", {
+        get: function () {
+            return this._Connection;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(fTelnetClient.prototype, "Crt", {
+        get: function () {
+            return this._Crt;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    fTelnetClient.prototype.Disconnect = function (prompt) {
+        if (typeof this._MenuButtons !== 'undefined') {
+            this._MenuButtons.style.display = 'none';
+        }
+        if (typeof this._Connection === 'undefined') {
+            return true;
+        }
+        if (!this._Connection.connected) {
+            return true;
+        }
+        if (!prompt || confirm('Are you sure you want to disconnect?')) {
+            this._Connection.onclose.off();
+            this._Connection.onconnect.off();
+            this._Connection.ondata.off();
+            this._Connection.onioerror.off();
+            this._Connection.onlocalecho.off();
+            this._Connection.onsecurityerror.off();
+            this._Connection.close();
+            delete this._Connection;
+            this.OnConnectionClose();
+            return true;
+        }
+        return false;
+    };
+    fTelnetClient.prototype.Download = function () {
+        var _this = this;
+        if (typeof this._MenuButtons !== 'undefined') {
+            this._MenuButtons.style.display = 'none';
+        }
+        if (typeof this._Connection === 'undefined') {
+            return;
+        }
+        if (!this._Connection.connected) {
+            return;
+        }
+        this._YModemReceive = new YModemReceive(this._Crt, this._Connection);
+        if (typeof this._Timer !== 'undefined') {
+            clearInterval(this._Timer);
+            delete this._Timer;
+        }
+        this._YModemReceive.ontransfercomplete.on(function () { _this.OnDownloadComplete(); });
+        this._YModemReceive.Download();
+    };
+    fTelnetClient.prototype.EnterScrollback = function () {
+        if (typeof this._MenuButtons !== 'undefined') {
+            this._MenuButtons.style.display = 'none';
+        }
+        if (typeof this._ScrollbackBar !== 'undefined') {
+            if (this._ScrollbackBar.style.display = 'none') {
+                this._Crt.EnterScrollback();
+                this._ScrollbackBar.style.display = 'block';
+            }
+        }
+    };
+    fTelnetClient.prototype.ExitScrollback = function () {
+        if (typeof this._ScrollbackBar !== 'undefined') {
+            if (this._ScrollbackBar.style.display = 'block') {
+                this._Crt.ExitScrollback();
+                this._ScrollbackBar.style.display = 'none';
+            }
+        }
+    };
+    fTelnetClient.prototype.FullScreenToggle = function () {
+        if (typeof this._MenuButtons !== 'undefined') {
+            this._MenuButtons.style.display = 'none';
+        }
+        if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+            if (this._fTelnetContainer.requestFullscreen) {
+                this._fTelnetContainer.requestFullscreen();
+            }
+            else if (this._fTelnetContainer.msRequestFullscreen) {
+                this._fTelnetContainer.msRequestFullscreen();
+            }
+            else if (this._fTelnetContainer.mozRequestFullScreen) {
+                this._fTelnetContainer.mozRequestFullScreen();
+            }
+            else if (this._fTelnetContainer.webkitRequestFullscreen) {
+                this._fTelnetContainer.webkitRequestFullscreen();
+            }
+        }
+        else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+            else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+            else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            }
+            else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+        }
+    };
+    fTelnetClient.prototype.LoadProxySettings = function () {
+        var _this = this;
+        if (this._Options.ProxyHostname === '') {
+            return;
+        }
+        if (this._Options.ProxyHostname.toLowerCase().indexOf('.ftelnet.ca') === -1) {
+            return;
+        }
+        this._LoadingProxySettings = 10;
+        try {
+            var xhr = new XMLHttpRequest();
+            xhr.open('get', '//embed-v2.ftelnet.ca/proxy-servers.json', true);
+            xhr.onload = function () {
+                var status = xhr.status;
+                if (status === 200) {
+                    var proxies = JSON.parse(xhr.responseText);
+                    var proxy = proxies[_this._Options.ProxyHostname.toLowerCase()];
+                    if ((proxy != null) && (proxy.CNAME != null)) {
+                        proxy = proxies[proxy.CNAME];
+                    }
+                    if (proxy != null) {
+                        if (proxy.Hostname !== _this._Options.ProxyHostname) {
+                            console.log('Overriding ProxyHostname to ' + proxy.Hostname + ' (from ' + _this._Options.ProxyHostname + ')');
+                            _this._Options.ProxyHostname = proxy.Hostname;
+                        }
+                        if (proxy.WsPort !== _this._Options.ProxyPort) {
+                            console.log('Overriding ProxyPort to ' + proxy.WsPort + ' (from ' + _this._Options.ProxyPort + ')');
+                            _this._Options.ProxyPort = proxy.WsPort;
+                        }
+                        if (proxy.WssPort !== _this._Options.ProxyPortSecure) {
+                            console.log('Overriding ProxyPortSecure to ' + proxy.WssPort + ' (from ' + _this._Options.ProxyPortSecure + ')');
+                            _this._Options.ProxyPortSecure = proxy.WssPort;
+                        }
+                    }
+                }
+                else {
+                    console.log('failed to get proxy-servers.json, status=' + status);
+                }
+                _this._LoadingProxySettings = 0;
+            };
+            xhr.onerror = function () {
+                console.log('failed to get proxy-servers.json');
+                _this._LoadingProxySettings = 0;
+            };
+            xhr.send();
+        }
+        catch (e) {
+            console.log('failed to get proxy-servers.json: ' + e);
+            this._LoadingProxySettings = 0;
+        }
+    };
+    fTelnetClient.prototype.OnAnsiESC0c = function () {
+        if (typeof this._Connection === 'undefined') {
+            return;
+        }
+        if (!this._Connection.connected) {
+            return;
+        }
+        this._Connection.writeString('\x1B[?50;86;84;88c');
+    };
+    fTelnetClient.prototype.OnAnsiESC5n = function () {
+        if (typeof this._Connection === 'undefined') {
+            return;
+        }
+        if (!this._Connection.connected) {
+            return;
+        }
+        this._Connection.writeString('\x1B[0n');
+    };
+    fTelnetClient.prototype.OnAnsiESC6n = function () {
+        if (typeof this._Connection === 'undefined') {
+            return;
+        }
+        if (!this._Connection.connected) {
+            return;
+        }
+        this._Connection.writeString(this._Ansi.CursorPosition());
+    };
+    fTelnetClient.prototype.OnAnsiESC255n = function () {
+        if (typeof this._Connection === 'undefined') {
+            return;
+        }
+        if (!this._Connection.connected) {
+            return;
+        }
+        this._Connection.writeString(this._Ansi.CursorPosition(this._Crt.WindCols, this._Crt.WindRows));
+    };
+    fTelnetClient.prototype.OnAnsiESCQ = function (font) {
+        if (this._Options.Emulation !== 'RIP') {
+            this._Crt.SetFont(font);
+        }
+    };
+    fTelnetClient.prototype.OnAnsiRIPDetect = function () {
+        if (this._Options.Emulation === 'RIP') {
+            if (typeof this._Connection === 'undefined') {
+                return;
+            }
+            if (!this._Connection.connected) {
+                return;
+            }
+            this._Connection.writeString('RIPSCRIP015400');
+        }
+    };
+    fTelnetClient.prototype.OnAnsiRIPDisable = function () {
+    };
+    fTelnetClient.prototype.OnAnsiRIPEnable = function () {
+    };
+    fTelnetClient.prototype.OnConnectionClose = function () {
+        this._ConnectButton.innerHTML = 'Reconnect';
+        this._ConnectButton.style.display = 'inline';
+        this._StatusBarLabel.innerHTML = 'Disconnected from ' + this._Options.Hostname + ':' + this._Options.Port;
+        this._StatusBar.style.backgroundColor = 'red';
+        this._ClientContainer.style.opacity = '0.5';
+    };
+    fTelnetClient.prototype.OnConnectionConnect = function () {
+        this._Crt.ClrScr();
+        if (this._Options.ProxyHostname === '') {
+            this._StatusBarLabel.innerHTML = 'Connected to ' + this._Options.Hostname + ':' + this._Options.Port;
+            this._StatusBar.style.backgroundColor = 'blue';
+            this._ClientContainer.style.opacity = '1.0';
+        }
+        else {
+            this._StatusBarLabel.innerHTML = 'Connected to ' + this._Options.Hostname + ':' + this._Options.Port + ' via ' + this._Options.ProxyHostname;
+            this._StatusBar.style.backgroundColor = 'blue';
+            this._ClientContainer.style.opacity = '1.0';
+        }
+        if (this._Options.ConnectionType === 'rlogin') {
+            var TerminalType = this._Options.RLoginTerminalType;
+            if (TerminalType === '') {
+                TerminalType = this._Options.Emulation + '/' + this._Options.BitsPerSecond;
+            }
+            if (typeof this._Connection === 'undefined') {
+                return;
+            }
+            if (!this._Connection.connected) {
+                return;
+            }
+            this._Connection.writeString(String.fromCharCode(0) + this._Options.RLoginClientUsername + String.fromCharCode(0) + this._Options.RLoginServerUsername + String.fromCharCode(0) + TerminalType + String.fromCharCode(0));
+            this._Connection.flush();
+        }
+    };
+    fTelnetClient.prototype.OnConnectionData = function () {
+        var _this = this;
+        if (typeof this._Timer !== 'undefined') {
+            if (typeof this._Connection !== 'undefined') {
+                var MSecElapsed = new Date().getTime() - this._LastTimer;
+                if (MSecElapsed < 1) {
+                    MSecElapsed = 1;
+                }
+                var BytesToRead = Math.floor(this._Options.BitsPerSecond / 8 / (1000 / MSecElapsed));
+                if (BytesToRead < 1) {
+                    BytesToRead = 1;
+                }
+                var Data = this._Connection.readString(BytesToRead);
+                if (Data.length > 0) {
+                    this.ondata.trigger(Data);
+                    if (this._Options.Emulation === 'RIP') {
+                        this._RIP.Parse(Data);
+                    }
+                    else {
+                        this._Ansi.Write(Data);
+                    }
+                }
+                if (this._Connection.bytesAvailable > 0) {
+                    clearTimeout(this._DataTimer);
+                    this._DataTimer = setTimeout(function () { _this.OnConnectionData(); }, 50);
+                }
+            }
+        }
+        this._LastTimer = new Date().getTime();
+    };
+    fTelnetClient.prototype.OnConnectionLocalEcho = function (value) {
+        if (this._Options.NegotiateLocalEcho) {
+            this._Options.LocalEcho = value;
+            this._Crt.LocalEcho = value;
+        }
+    };
+    fTelnetClient.prototype.OnConnectionIOError = function () {
+        console.log('fTelnet.OnConnectionIOError');
+    };
+    fTelnetClient.prototype.OnConnectionSecurityError = function () {
+        this._ConnectButton.innerHTML = 'Retry Connection';
+        this._ConnectButton.style.display = 'inline';
+        if (this._Options.ProxyHostname === '') {
+            this._StatusBarLabel.innerHTML = 'Unable to connect to ' + this._Options.Hostname + ':' + this._Options.Port;
+            this._StatusBar.style.backgroundColor = 'red';
+            this._ClientContainer.style.opacity = '0.5';
+        }
+        else {
+            this._StatusBarLabel.innerHTML = 'Unable to connect to ' + this._Options.Hostname + ':' + this._Options.Port + ' via ' + this._Options.ProxyHostname;
+            this._StatusBar.style.backgroundColor = 'red';
+            this._ClientContainer.style.opacity = '0.5';
+        }
+    };
+    fTelnetClient.prototype.OnCrtKeyPressed = function () {
+        if (typeof this._Timer !== 'undefined') {
+            while (this._Crt.KeyPressed()) {
+                var KPE = this._Crt.ReadKey();
+                if (typeof KPE !== 'undefined') {
+                    if (KPE.keyString.length > 0) {
+                        if ((typeof this._Connection !== 'undefined') && (this._Connection.connected)) {
+                            if (KPE.keyString === '\r\n') {
+                                this._Connection.writeString(this._Options.Enter);
+                            }
+                            else {
+                                this._Connection.writeString(KPE.keyString);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    };
+    fTelnetClient.prototype.OnCrtScreenSizeChanged = function () {
+        var NewWidth;
+        var NewHeight;
+        if (this._Options.Emulation === 'RIP') {
+            NewWidth = 640;
+        }
+        else {
+            if (this._UseModernScrollback) {
+                NewWidth = this._Crt.ScreenCols * this._Crt.Font.Width + GetScrollbarWidth.Width;
+                NewHeight = this._Crt.ScreenRows * this._Crt.Font.Height;
+                this._ClientContainer.style.width = NewWidth + 'px';
+                this._ClientContainer.style.height = NewHeight + 'px';
+                this._ClientContainer.scrollTop = this._ClientContainer.scrollHeight;
+            }
+            else {
+                NewWidth = this._Crt.ScreenCols * this._Crt.Font.Width;
+            }
+        }
+        if (typeof this._FocusWarningBar !== 'undefined') {
+            this._FocusWarningBar.style.width = NewWidth - 10 + 'px';
+        }
+        if (typeof this._ScrollbackBar !== 'undefined') {
+            this._ScrollbackBar.style.width = NewWidth - 10 + 'px';
+        }
+        if (typeof this._StatusBar !== 'undefined') {
+            this._StatusBar.style.width = NewWidth - 10 + 'px';
+        }
+        if ((document.getElementById('fTelnetScript') !== null) && (document.getElementById('fTelnetKeyboardCss') !== null)) {
+            var KeyboardSizes = [960, 800, 720, 640, 560, 480, 360, 320];
+            for (var i = 0; i < KeyboardSizes.length; i++) {
+                if (((NewWidth >= KeyboardSizes[i]) && (KeyboardSizes[i] <= screen.width)) || (i === (KeyboardSizes.length - 1))) {
+                    document.getElementById('fTelnetKeyboardCss').href = StringUtils.GetUrl('keyboard/keyboard-' + KeyboardSizes[i].toString(10) + '.min.css');
+                    break;
+                }
+            }
+        }
+    };
+    fTelnetClient.prototype.OnDownloadComplete = function () {
+        var _this = this;
+        this._Timer = setInterval(function () { _this.OnTimer(); }, 250);
+    };
+    fTelnetClient.prototype.OnMenuButtonClick = function () {
+        this._MenuButtons.style.display = (this._MenuButtons.style.display === 'none') ? 'block' : 'none';
+        this._MenuButtons.style.left = Offset.getOffset(this._MenuButton).x + this._MenuButton.clientWidth + 'px';
+        this._MenuButtons.style.top = Offset.getOffset(this._MenuButton).y - this._MenuButtons.clientHeight + 'px';
+    };
+    fTelnetClient.prototype.OnTimer = function () {
+        if ((typeof this._Connection !== 'undefined') && (this._Connection.connected)) {
+            if (document.hasFocus() && !this._HasFocus) {
+                this._HasFocus = true;
+                this._FocusWarningBar.style.display = 'none';
+            }
+            else if (!document.hasFocus() && this._HasFocus) {
+                this._HasFocus = false;
+                this._FocusWarningBar.style.display = 'block';
+            }
+        }
+        else {
+            if (this._FocusWarningBar.style.display === 'block') {
+                this._FocusWarningBar.style.display = 'none';
+            }
+        }
+        if (this._UseModernScrollback) {
+            var ScrolledUp = (this._ClientContainer.scrollHeight - this._ClientContainer.scrollTop - this._ClientContainer.clientHeight > 1);
+            if (ScrolledUp && (this._ScrollbackBar.style.display === 'none')) {
+                this._ScrollbackBar.style.display = 'block';
+            }
+            else if (!ScrolledUp && (this._ScrollbackBar.style.display === 'block')) {
+                this._ScrollbackBar.style.display = 'none';
+            }
+        }
+    };
+    fTelnetClient.prototype.OnUploadComplete = function () {
+        var _this = this;
+        this._Timer = setInterval(function () { _this.OnTimer(); }, 250);
+    };
+    fTelnetClient.prototype.OnUploadFileSelected = function () {
+        var _this = this;
+        if (typeof this._Connection === 'undefined') {
+            return;
+        }
+        if (!this._Connection.connected) {
+            return;
+        }
+        this._YModemSend = new YModemSend(this._Crt, this._Connection);
+        if (typeof this._Timer !== 'undefined') {
+            clearInterval(this._Timer);
+            delete this._Timer;
+        }
+        this._YModemSend.ontransfercomplete.on(function () { _this.OnUploadComplete(); });
+        if (this._UploadInput.files !== null) {
+            for (var i = 0; i < this._UploadInput.files.length; i++) {
+                this.UploadFile(this._UploadInput.files[i], this._UploadInput.files.length);
+            }
+        }
+    };
+    fTelnetClient.prototype.StuffInputBuffer = function (text) {
+        for (var i = 0; i < text.length; i++) {
+            this._Crt.PushKeyPress(text.charCodeAt(i), 0, false, false, false);
+        }
+    };
+    fTelnetClient.prototype.Upload = function () {
+        if (typeof this._MenuButtons !== 'undefined') {
+            this._MenuButtons.style.display = 'none';
+        }
+        if (typeof this._Connection === 'undefined') {
+            return;
+        }
+        if (!this._Connection.connected) {
+            return;
+        }
+        this._UploadInput.click();
+    };
+    fTelnetClient.prototype.UploadFile = function (file, fileCount) {
+        var _this = this;
+        var reader = new FileReader();
+        reader.onload = function () {
+            var FR = new FileRecord(file.name, file.size);
+            var Buffer = reader.result;
+            var Bytes = new Uint8Array(Buffer);
+            for (var i = 0; i < Bytes.length; i++) {
+                FR.data.writeByte(Bytes[i]);
+            }
+            FR.data.position = 0;
+            _this._YModemSend.Upload(FR, fileCount);
+        };
+        reader.readAsArrayBuffer(file);
+    };
+    Object.defineProperty(fTelnetClient.prototype, "VirtualKeyboardVibrateDuration", {
+        get: function () {
+            return this._Options.VirtualKeyboardVibrateDuration;
+        },
+        set: function (value) {
+            this._Options.VirtualKeyboardVibrateDuration = value;
+            this._VirtualKeyboard.VibrateDurationInMilliseconds = value;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(fTelnetClient.prototype, "VirtualKeyboardVisible", {
+        get: function () {
+            return this._Options.VirtualKeyboardVisible;
+        },
+        set: function (value) {
+            if (typeof this._MenuButtons !== 'undefined') {
+                this._MenuButtons.style.display = 'none';
+            }
+            this._Options.VirtualKeyboardVisible = value;
+            this._VirtualKeyboard.Visible = value;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    return fTelnetClient;
+}());
+var fTelnetOptions = (function () {
+    function fTelnetOptions() {
+        this.AllowModernScrollback = true;
+        this.BareLFtoCRLF = false;
+        this.BitsPerSecond = 57600;
+        this.ConnectionType = 'telnet';
+        this.Emulation = 'ansi-bbs';
+        this.Enter = '\r';
+        this.Font = 'CP437';
+        this.ForceWss = false;
+        this.Hostname = 'bbs.ftelnet.ca';
+        this.LocalEcho = false;
+        this.NegotiateLocalEcho = true;
+        this.Port = 1123;
+        this.ProxyHostname = '';
+        this.ProxyPort = 1123;
+        this.ProxyPortSecure = 11235;
+        this.RLoginClientUsername = '';
+        this.RLoginServerUsername = '';
+        this.RLoginTerminalType = '';
+        this.ScreenColumns = 80;
+        this.ScreenRows = 25;
+        this.SendLocation = true;
+        this.SkipRedrawWhenSameFontSize = false;
+        this.SplashScreen = '';
+        this.VirtualKeyboardVibrateDuration = 25;
+        this.VirtualKeyboardVisible = DetectMobileBrowser.IsMobile;
+        this.WebSocketUrlPath = '';
+    }
+    return fTelnetOptions;
+}());
+//# sourceMappingURL=ftelnetclient.js.map
