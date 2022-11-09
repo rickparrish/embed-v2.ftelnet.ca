@@ -1,3 +1,4 @@
+var DirectConnectUrl = '';
 var SnippetDiv = '';
 var SnippetScriptfTelnet = '';
 var SnippetScriptOptions = '';
@@ -16,7 +17,7 @@ $(CheckBoxes).click(function () {
     Update();
 });
 
-var ComboBoxes = '#cboAutoConnect, #cboBareLFtoCRLF, #cboBitsPerSecond, #cboConnectionType, #cboEmulation, #cboEnter, #cboFileTransfer, #cboFont, #cboForceWss, #cboProxyServer, #cboSendLocation, #cboVirtualKeyboardVisible';
+var ComboBoxes = '#cboAutoConnect, #cboBareLFtoCRLF, #cboBitsPerSecond, #cboConnectionType, #cboEmulation, #cboEnter, #cboFileTransfer, #cboFont, #cboForceWss, #cboLocalEcho, #cboProxyServer, #cboSendLocation, #cboVirtualKeyboardVisible';
 $(ComboBoxes).change(function () {
     Update();
 });
@@ -117,40 +118,64 @@ function Update() {
     SnippetDiv = '<div id="fTelnetContainer' + ClientId + '" class="fTelnetContainer"></div>\r\n';
     SnippetScriptfTelnet = '<script>document.write(\'<script src="//embed-v2.ftelnet.ca/js/ftelnet-loader.' + RIP + '.' + XFER + '.js?v=\' + (new Date()).getTime() + \'"><\\/script>\');</script>\r\n';
     SnippetScriptOptions = '    var Options' + ClientId + ' = new fTelnetOptions();\r\n';
+    DirectConnectUrl = location.protocol + '//embed-v2.ftelnet.ca/connect/';
     SnippetScriptOptions += '    Options' + ClientId + '.BareLFtoCRLF = ' + $('#cboBareLFtoCRLF').val() + ';\r\n';
+    DirectConnectUrl += '?BareLFtoCRLF=' + $('#cboBareLFtoCRLF').val();
     SnippetScriptOptions += '    Options' + ClientId + '.BitsPerSecond = ' + $('#cboBitsPerSecond').val() + ';\r\n';
+    DirectConnectUrl += '&BitsPerSecond=' + $('#cboBitsPerSecond').val();
     SnippetScriptOptions += '    Options' + ClientId + '.ConnectionType = \'' + $('#cboConnectionType').val() + '\';\r\n';
+    DirectConnectUrl += '&ConnectionType=' + $('#cboConnectionType').val();
     SnippetScriptOptions += '    Options' + ClientId + '.Emulation = \'' + $('#cboEmulation').val() + '\';\r\n';
+    DirectConnectUrl += '&Emulation=' + $('#cboEmulation').val();
     SnippetScriptOptions += '    Options' + ClientId + '.Enter = \'' + $('#cboEnter').val() + '\';\r\n';
+    DirectConnectUrl += '&Enter=' + $('#cboEnter').val();
     SnippetScriptOptions += '    Options' + ClientId + '.Font = \'' + $('#cboFont').val() + '\';\r\n';
+    DirectConnectUrl += '&Font=' + $('#cboFont').val();
     SnippetScriptOptions += '    Options' + ClientId + '.ForceWss = ' + $('#cboForceWss').val() + ';\r\n';
+    DirectConnectUrl += '&ForceWss=' + $('#cboForceWss').val();
     SnippetScriptOptions += '    Options' + ClientId + '.Hostname = \'' + $('#txtHostname').val() + '\';\r\n';
+    DirectConnectUrl += '&Hostname=' + $('#txtHostname').val();
     SnippetScriptOptions += '    Options' + ClientId + '.LocalEcho = ' + $('#cboLocalEcho').val() + ';\r\n';
+    DirectConnectUrl += '&LocalEcho=' + $('#cboLocalEcho').val();
     SnippetScriptOptions += '    Options' + ClientId + '.NegotiateLocalEcho = ' + ($('#chkNegotiateLocalEcho').is(':checked') ? 'true' : 'false') + ';\r\n';
+    DirectConnectUrl += '&NegotiateLocalEcho=' + ($('#chkNegotiateLocalEcho').is(':checked') ? 'true' : 'false');
     SnippetScriptOptions += '    Options' + ClientId + '.Port = ' + $('#txtPort').val() + ';\r\n';
+    DirectConnectUrl += '&Port=' + $('#txtPort').val();
     if ($('#cboProxyServer').val() !== 'none') {
         var HostPorts = $('#cboProxyServer').val().split(':');
         SnippetScriptOptions += '    Options' + ClientId + '.ProxyHostname = \'' + HostPorts[0] + '\';\r\n';
+        DirectConnectUrl += '&ProxyHostname=' + HostPorts[0];
         SnippetScriptOptions += '    Options' + ClientId + '.ProxyPort = ' + HostPorts[1] + ';\r\n';
+        DirectConnectUrl += '&ProxyPort=' + HostPorts[1];
         SnippetScriptOptions += '    Options' + ClientId + '.ProxyPortSecure = ' + HostPorts[2] + ';\r\n';
+        DirectConnectUrl += '&ProxyPortSecure=' + HostPorts[2];
     }        
     if ($('#cboConnectionType').val() === 'rlogin') {
         SnippetScriptOptions += '    Options' + ClientId + '.RLoginClientUsername = \'' + $('#txtRLoginClientUsername').val() + '\';\r\n';
+        DirectConnectUrl += '&RLoginClientUsername=' + $('#txtRLoginClientUsername').val();
         SnippetScriptOptions += '    Options' + ClientId + '.RLoginServerUsername = \'' + $('#txtRLoginServerUsername').val() + '\';\r\n';
+        DirectConnectUrl += '&RLoginServerUsername=' + $('#txtRLoginServerUsername').val();
         SnippetScriptOptions += '    Options' + ClientId + '.RLoginTerminalType = \'' + $('#txtRLoginTerminalType').val() + '\';\r\n';
+        DirectConnectUrl += '&RLoginTerminalType=' + $('#txtRLoginTerminalType').val();
     }
     SnippetScriptOptions += '    Options' + ClientId + '.ScreenColumns = ' + $('#txtScreenColumns').val() + ';\r\n';
+    DirectConnectUrl += '&ScreenColumns=' + $('#txtScreenColumns').val();
     SnippetScriptOptions += '    Options' + ClientId + '.ScreenRows = ' + $('#txtScreenRows').val() + ';\r\n';
+    DirectConnectUrl += '&ScreenRows=' + $('#txtScreenRows').val();
     SnippetScriptOptions += '    Options' + ClientId + '.SendLocation = ' + $('#cboSendLocation').val() + ';\r\n';
+    DirectConnectUrl += '&SendLocation=' + $('#cboSendLocation').val();
     if (SplashScreen !== '') {
         SnippetScriptOptions += '    Options' + ClientId + '.SplashScreen = \'' + SplashScreen + '\';\r\n';
+        // ConnectUrl does not support SplashScreen
     }
     if ($('#cboVirtualKeyboardVisible').val() !== 'auto') {
         SnippetScriptOptions += '    Options' + ClientId + '.VirtualKeyboardVisible = ' + $('#cboVirtualKeyboardVisible').val() + ';\r\n';
+        DirectConnectUrl += '&VirtualKeyboardVisible=' + $('#cboVirtualKeyboardVisible').val();
     }
     SnippetScriptOptions += '    var fTelnet' + ClientId + ' = new fTelnetClient(\'fTelnetContainer' + ClientId + '\', Options' + ClientId + ');\r\n';
     if ($('#cboAutoConnect').val() === 'true') {
         SnippetScriptOptions += '    fTelnet' + ClientId + '.Connect();\r\n';
+        DirectConnectUrl += '&AutoConnect=' + $('#cboAutoConnect').val();
     }
 
     // Update the page with the snippets
@@ -160,4 +185,7 @@ function Update() {
     // Update size of snippet textbox
     var Lines = Snippet.split(/\r\n/).length;
     $('#txtSnippet').attr('rows', Lines);
+
+    // Update the direct connect link
+    $('#lnkDirectConnect').attr('href', DirectConnectUrl);
 }

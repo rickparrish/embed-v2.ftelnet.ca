@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+    <title>fTelnet Embed Wizard v2</title>
+
+    <style type="text/css">
+    html, body {
+        background-color: black;
+        margin: 0;
+        padding: 0;
+    }        
+    </style>
+</head>
+<body>
+    <div id="fTelnetContainer" class="fTelnetContainer"></div>
+    <script>document.write('<script src="//embed-v2.ftelnet.ca/js/ftelnet-loader.rip.xfer.js?v=' + (new Date()).getTime() + '"><\/script>');</script>
+    <script>
+        function getString(key, defaultValue) {
+            // From: https://stackoverflow.com/a/901144/342378
+            key = key.replace(/[\[\]]/g, '\\$&');
+            var regex = new RegExp('[?&]' + key + '(=([^&#]*)|&|#|$)');
+            var results = regex.exec(window.location.href);
+            if (!results) return defaultValue;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, ' '));
+        }
+
+        function getBool(key, defaultValue) {
+            var result = getString(key, defaultValue);
+            return ((result != 0) && (result != 'false'));
+        }
+
+        function getInt(key, defaultValue) {
+            return parseInt(getString(key, defaultValue));
+        }
+        
+        var Options = new fTelnetOptions();
+        Options.BareLFtoCRLF = getBool('BareLFtoCRLF', false);
+        Options.BitsPerSecond = getInt('BitsPerSecond', 57600);
+        Options.ConnectionType = getString('ConnectionType', 'telnet');
+        Options.Emulation = getString('Emulation', 'ansi-bbs');
+        Options.Enter = getString('Enter', '\r');
+        Options.Font = getString('Font', 'CP437');
+        Options.ForceWss = getBool('ForceWss', false);
+        Options.Hostname = getString('Hostname', '');
+        Options.LocalEcho = getBool('LocalEcho', false);
+        Options.NegotiateLocalEcho = getBool('NegotiateLocalEcho', true);
+        Options.Port = getInt('Port', 23);
+        Options.ProxyHostname = getString('ProxyHostname', '');
+        Options.ProxyPort = getInt('ProxyPort', 80);
+        Options.ProxyPortSecure = getInt('ProxyPortSecure', 443);
+        Options.ScreenColumns = getInt('ScreenColumns', 80);
+        Options.ScreenRows = getInt('ScreenRows', 25);
+        Options.SendLocation = getBool('SendLocation', true);
+        var fTelnet = new fTelnetClient('fTelnetContainer', Options);
+        if (getBool('AutoConnect', false)) {
+            fTelnet.Connect();
+        }
+    </script>
+
+    <!-- Add support for WebSocket to IE9 -->
+    <!--[if lt IE 10]>
+        <script type="text/javascript" src="../ftelnet/swfobject.js"></script>
+        <script type="text/javascript" src="../ftelnet/web_socket.js"></script>
+        <script>
+            // Let the library know where WebSocketMain.swf is:
+            WEB_SOCKET_SWF_LOCATION = "../ftelnet/WebSocketMain.swf";
+        </script>
+    <![endif]-->
+    <!-- Stop IE8 and below from complaining about Object.defineProperty -->
+    <!--[if lt IE 9]>
+        <script>
+            Object.defineProperty = function () { /* Do Nothing */ };
+        </script>
+    <![endif]-->
+
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-4602017-10', 'auto');
+      ga('send', 'pageview');
+    </script>
+</body>
+</html>
