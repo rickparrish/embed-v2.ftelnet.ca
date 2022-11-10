@@ -43,7 +43,7 @@
         Options.BitsPerSecond = getInt('BitsPerSecond', 57600);
         Options.ConnectionType = getString('ConnectionType', 'telnet');
         Options.Emulation = getString('Emulation', 'ansi-bbs');
-        Options.Enter = getString('Enter', '\r');
+        Options.Enter = getString('Enter', '\r').replace('\\r', '\r').replace('\\n', '\n');
         Options.Font = getString('Font', 'CP437');
         Options.ForceWss = getBool('ForceWss', false);
         Options.Hostname = getString('Hostname', '');
