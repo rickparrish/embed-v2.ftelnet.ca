@@ -26,10 +26,20 @@
     "proxy-nl.ftelnet.ca": { "CNAME": "p-eu.ftelnet.ca" },
     "proxy-uk.ftelnet.ca": { "CNAME": "p-eu.ftelnet.ca" },
 
-    "p-us-east.ftelnet.ca": {
+    "p-us-central.ftelnet.ca": {
         "Continent": "North America",
         "Country": "United States",
         "City": "Chicago, IL",
+        "Hostname": "p-us-east.ftelnet.ca",
+        "WsPort": 80,
+        "WssPort": 443,
+        "UptimeRobotApiKey": "m793078347-4cdf6a09b4c32d4a0284a82b"
+    },
+
+    "p-us-east.ftelnet.ca": {
+        "Continent": "North America",
+        "Country": "United States",
+        "City": "New York, NY",
         "Hostname": "p-us-east.ftelnet.ca",
         "WsPort": 80,
         "WssPort": 443,
@@ -52,7 +62,7 @@
     "p-us-west.ftelnet.ca": {
         "Continent": "North America",
         "Country": "United States",
-        "City": "San Jose, CA",
+        "City": "Los Angeles, CA",
         "Hostname": "p-us-west.ftelnet.ca",
         "WsPort": 80,
         "WssPort": 443,
