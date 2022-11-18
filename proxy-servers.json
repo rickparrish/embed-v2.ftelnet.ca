@@ -13,8 +13,8 @@
 
     "p-eu.ftelnet.ca": {
         "Continent": "Europe",
-        "Country": "United Kingdom",
-        "City": "London",
+        "Country": "Netherlands",
+        "City": "Alblasserdam",
         "Hostname": "p-eu.ftelnet.ca",
         "WsPort": 80,
         "WssPort": 443,
