@@ -116,9 +116,9 @@ function Update() {
     
     // Build the snippet
     SnippetDiv = '<div id="fTelnetContainer' + ClientId + '" class="fTelnetContainer"></div>\r\n';
-    SnippetScriptfTelnet = '<script>document.write(\'<script src="//embed-v2.ftelnet.ca/js/ftelnet-loader.' + RIP + '.' + XFER + '.js?v=\' + (new Date()).getTime() + \'"><\\/script>\');</script>\r\n';
+    SnippetScriptfTelnet = '<script>document.write(\'<script src="//' + window.location.hostname + '/js/ftelnet-loader.' + RIP + '.' + XFER + '.js?v=\' + (new Date()).getTime() + \'"><\\/script>\');</script>\r\n';
     SnippetScriptOptions = '    var Options' + ClientId + ' = new fTelnetOptions();\r\n';
-    DirectConnectUrl = location.protocol + '//embed-v2.ftelnet.ca/connect/';
+    DirectConnectUrl = location.protocol + '//' + window.location.hostname + '/connect/';
     SnippetScriptOptions += '    Options' + ClientId + '.BareLFtoCRLF = ' + $('#cboBareLFtoCRLF').val() + ';\r\n';
     DirectConnectUrl += '?BareLFtoCRLF=' + $('#cboBareLFtoCRLF').val();
     SnippetScriptOptions += '    Options' + ClientId + '.BitsPerSecond = ' + $('#cboBitsPerSecond').val() + ';\r\n';
