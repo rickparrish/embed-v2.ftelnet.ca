@@ -1,1 +1,1 @@
-document.write('<script src="//embed-v2.ftelnet.ca/ftelnet/ftelnet.norip.xfer.min.js?v=2023-09-13" id="fTelnetScript"><\/script>');
+document.write('<script src="//embed-v2.ftelnet.ca/ftelnet/ftelnet.norip.xfer.min.js?v=2023-12-15" id="fTelnetScript"><\/script>');
