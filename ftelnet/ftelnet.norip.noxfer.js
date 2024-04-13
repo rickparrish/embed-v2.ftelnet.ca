@@ -4770,7 +4770,12 @@ var fTelnetClient = (function () {
             }
             catch (e) {
             }
-            if (this._Options.Emulation === 'C64') {
+            if (this._Options.Emulation === 'Atari') {
+                this._Options.Enter = '\x9B';
+                this._Options.Font = 'Atari-Graphics';
+                this._Options.ScreenColumns = 40;
+            }
+            else if (this._Options.Emulation === 'C64') {
                 this._Options.Font = 'C64-Lower';
                 this._Options.ScreenColumns = 40;
             }
@@ -4845,6 +4850,7 @@ var fTelnetClient = (function () {
         this._Crt.onkeypressed.on(function () { _this.OnCrtKeyPressed(); });
         this._Crt.onmousereport.on(function (position) { _this.OnCrtMouseReport(position); });
         this._Crt.onscreensizechange.on(function () { _this.OnCrtScreenSizeChanged(); });
+        this._Crt.Atari = (this._Options.Emulation === 'Atari');
         this._Crt.BareLFtoCRLF = this._Options.BareLFtoCRLF;
         this._Crt.C64 = (this._Options.Emulation === 'C64');
         this._Crt.LocalEcho = this._Options.LocalEcho;
@@ -5073,7 +5079,17 @@ var fTelnetClient = (function () {
         this._VirtualKeyboard.VibrateDurationInMilliseconds = this._Options.VirtualKeyboardVibrateDuration;
         this._VirtualKeyboard.Visible = this._Options.VirtualKeyboardVisible;
         this.OnCrtScreenSizeChanged();
-        if (this._Options.Emulation === 'C64') {
+        if (this._Options.Emulation === 'Atari') {
+            if (this._Options.SplashScreen === '') {
+                this._Crt.Write(atob('DQpmVGVsbmV0IC0tIFRlbG5ldCBmb3IgdGhlIFdlYg0KICBXZWIgYmFzZWQgQkJTIHRlcm1pbmFsIGNsaWVudA0KDQpDb3B5cmlnaHQgKGMpIDIwMDkt'));
+                this._Crt.Write(new Date().getFullYear().toString());
+                this._Crt.Write(atob('IFImTSBTb2Z0d2FyZS4NCkFsbCBSaWdodHMgUmVzZXJ2ZWQNCg0K'));
+            }
+            else {
+                this._Crt.Write(atob(this._Options.SplashScreen));
+            }
+        }
+        else if (this._Options.Emulation === 'C64') {
             if (this._Options.SplashScreen === '') {
                 this._Crt.Write(atob('DQpGdEVMTkVUIC0tIHRFTE5FVCBGT1IgVEhFIHdFQg0KICB3RUIgQkFTRUQgYmJzIFRFUk1JTkFMIENMSUVOVA0KDQpjT1BZUklHSFQgKGMpIDIwMDkt'));
                 this._Crt.Write(new Date().getFullYear().toString());

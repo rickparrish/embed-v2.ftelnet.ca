@@ -9,8 +9,8 @@
 
     <title>fTelnet Embed Wizard</title>
 
-    <link href="css/bootstrap.min.css?v=2023-12-15" rel="stylesheet" />
-    <link href="css/site.css?v=2023-12-15" rel="stylesheet" />
+    <link href="css/bootstrap.min.css?v=2024-04-13" rel="stylesheet" />
+    <link href="css/site.css?v=2024-04-13" rel="stylesheet" />
 </head>
 <body>
     <!-- Fixed navbar -->
@@ -187,9 +187,10 @@
             <div class="row">
                 <div class="col-xs-6">
                     <label class="control-label" for="cboEmulation">What Emulation should fTelnet use?</label>
-                    &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="right" title="Emulation" data-content="Most likely you want ansi-bbs, but if you run a C64 or RIP capable BBS then choose one of the other options."><span class="glyphicon glyphicon-info-sign"></span></a>
+                    &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="right" title="Emulation" data-content="Most likely you want ansi-bbs, but if you run an Atari, C64, or RIP capable BBS then choose one of the other options."><span class="glyphicon glyphicon-info-sign"></span></a>
                     <select class="form-control" id="cboEmulation">
                         <option value="ansi-bbs" selected="selected">ansi-bbs</option>
+                        <option value="Atari">Atari</option>
                         <option value="C64">Commodore 64</option>
                         <option value="RIP">RIP (still very experimental, only meant for testing)</option>
                     </select>
@@ -328,8 +329,8 @@
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
     <script>$.fn.modal || document.write('<script src="js/bootstrap.min.js"><\/script>')</script>
 
-    <script src="js/wizard.js?v=2023-12-15"></script>
-    <script src="ftelnet/ftelnet.rip.xfer.min.js?v=2023-12-15" id="fTelnetScript"></script>
+    <script src="js/wizard.js?v=2024-04-13"></script>
+    <script src="ftelnet/ftelnet.rip.xfer.min.js?v=2024-04-13" id="fTelnetScript"></script>
 
     <script>
       $(function () {
