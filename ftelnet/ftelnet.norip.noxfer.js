@@ -5081,9 +5081,9 @@ var fTelnetClient = (function () {
         this.OnCrtScreenSizeChanged();
         if (this._Options.Emulation === 'Atari') {
             if (this._Options.SplashScreen === '') {
-                this._Crt.Write(atob('DQpmVGVsbmV0IC0tIFRlbG5ldCBmb3IgdGhlIFdlYg0KICBXZWIgYmFzZWQgQkJTIHRlcm1pbmFsIGNsaWVudA0KDQpDb3B5cmlnaHQgKGMpIDIwMDkt'));
+                this._Crt.Write(atob('m2ZUZWxuZXQgLS0gVGVsbmV0IGZvciB0aGUgV2VimyAgV2ViIGJhc2VkIEJCUyB0ZXJtaW5hbCBjbGllbnSbm0NvcHlyaWdodCAoYykgMjAwOS0'));
                 this._Crt.Write(new Date().getFullYear().toString());
-                this._Crt.Write(atob('IFImTSBTb2Z0d2FyZS4NCkFsbCBSaWdodHMgUmVzZXJ2ZWQNCg0K'));
+                this._Crt.Write(atob('IFImTSBTb2Z0d2FyZS6bQWxsIFJpZ2h0cyBSZXNlcnZlZJub'));
             }
             else {
                 this._Crt.Write(atob(this._Options.SplashScreen));
