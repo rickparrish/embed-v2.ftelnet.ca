@@ -1837,6 +1837,9 @@ var Crt = (function () {
         this.TextAttr &= 0xF7;
     };
     Crt.prototype.MousePositionToScreenPosition = function (x, y) {
+        var rect = this._Canvas.getBoundingClientRect();
+        x *= this._Canvas.width / rect.width;
+        y *= this._Canvas.height / rect.height;
         if (this._UseModernScrollback) {
             y -= this._ScrollbackSize * this._Font.Height;
         }
@@ -4225,7 +4228,7 @@ var TelnetCommand;
 })(TelnetCommand || (TelnetCommand = {}));
 var TelnetConnection = (function (_super) {
     __extends(TelnetConnection, _super);
-    function TelnetConnection(crt) {
+    function TelnetConnection(crt, emulation) {
         var _this = _super.call(this) || this;
         _this._Crt = crt;
         _this._NegotiatedOptions = [];
@@ -4234,7 +4237,17 @@ var TelnetConnection = (function (_super) {
         }
         _this._NegotiationState = TelnetNegotiationState.Data;
         _this._TerminalTypeIndex = 0;
-        _this._TerminalTypes = ['ansi-bbs', 'ansi', 'cp437', 'cp437'];
+        _this._TerminalTypes = [emulation];
+        if (_this._TerminalTypes.indexOf('ansi-bbs') === -1) {
+            _this._TerminalTypes.push('ansi-bbs');
+        }
+        if (_this._TerminalTypes.indexOf('ansi') === -1) {
+            _this._TerminalTypes.push('ansi');
+        }
+        if (_this._TerminalTypes.indexOf('cp437') === -1) {
+            _this._TerminalTypes.push('cp437');
+        }
+        _this._TerminalTypes.push(_this._TerminalTypes[_this._TerminalTypes.length - 1]);
         return _this;
     }
     TelnetConnection.prototype.flush = function () {
@@ -8496,7 +8509,7 @@ var fTelnetClient = (function () {
                 this._Options.Font = 'RIP_8x8';
                 this._Options.ScreenRows = 43;
             }
-            else {
+            else if (this._Options.Emulation === '') {
                 this._Options.Emulation = 'ansi-bbs';
             }
             this.LoadProxySettings();
@@ -8892,7 +8905,7 @@ var fTelnetClient = (function () {
                 this._Connection = new WebSocketConnection();
                 break;
             default:
-                this._Connection = new TelnetConnection(this._Crt);
+                this._Connection = new TelnetConnection(this._Crt, this._Options.Emulation);
                 this._Connection.LocalEcho = this._Options.LocalEcho;
                 this._Connection.onlocalecho.on(function (value) { _this.OnConnectionLocalEcho(value); });
                 this._Connection.SendLocation = this._Options.SendLocation;
