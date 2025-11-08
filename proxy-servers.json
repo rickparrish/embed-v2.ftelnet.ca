@@ -13,8 +13,8 @@
 
     "p-eu.ftelnet.ca": {
         "Continent": "Europe",
-        "Country": "Netherlands",
-        "City": "Alblasserdam",
+        "Country": "France",
+        "City": "Strasbourg",
         "Hostname": "p-eu.ftelnet.ca",
         "WsPort": 80,
         "WssPort": 443,
@@ -29,7 +29,7 @@
     "p-us-east.ftelnet.ca": {
         "Continent": "North America",
         "Country": "United States",
-        "City": "New York, NY",
+        "City": "Ashburn, VA",
         "Hostname": "p-us-east.ftelnet.ca",
         "WsPort": 80,
         "WssPort": 443,
@@ -53,7 +53,7 @@
     "p-us-west.ftelnet.ca": {
         "Continent": "North America",
         "Country": "United States",
-        "City": "Los Angeles, CA",
+        "City": "San Jose, CA",
         "Hostname": "p-us-west.ftelnet.ca",
         "WsPort": 80,
         "WssPort": 443,
