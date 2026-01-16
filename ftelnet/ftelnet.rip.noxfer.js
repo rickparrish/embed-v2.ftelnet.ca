@@ -9024,11 +9024,15 @@ var fTelnetClient = (function () {
             }
         }
     };
-    fTelnetClient.prototype.FullScreenToggle = function () {
+    fTelnetClient.prototype.FullScreenToggle = function (fullscreen) {
+        if (fullscreen === void 0) { fullscreen = null; }
         if (typeof this._MenuButtons !== 'undefined') {
             this._MenuButtons.style.display = 'none';
         }
         if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+            if (fullscreen === false) {
+                return;
+            }
             if (this._fTelnetContainer.requestFullscreen) {
                 this._fTelnetContainer.requestFullscreen();
             }
@@ -9043,6 +9047,9 @@ var fTelnetClient = (function () {
             }
         }
         else {
+            if (fullscreen === true) {
+                return;
+            }
             if (document.exitFullscreen) {
                 document.exitFullscreen();
             }
@@ -9220,6 +9227,9 @@ var fTelnetClient = (function () {
             }
             this._Connection.writeString(String.fromCharCode(0) + this._Options.RLoginClientUsername + String.fromCharCode(0) + this._Options.RLoginServerUsername + String.fromCharCode(0) + TerminalType + String.fromCharCode(0));
             this._Connection.flush();
+        }
+        if (this._Options.FullScreenOnConnect) {
+            this.FullScreenToggle(true);
         }
     };
     fTelnetClient.prototype.OnConnectionData = function () {
@@ -9468,6 +9478,7 @@ var fTelnetOptions = (function () {
         this.Enter = '\r';
         this.Font = 'CP437';
         this.ForceWss = false;
+        this.FullScreenOnConnect = false;
         this.Hostname = 'bbs.ftelnet.ca';
         this.LocalEcho = false;
         this.NegotiateLocalEcho = true;

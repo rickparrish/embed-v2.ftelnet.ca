@@ -17,7 +17,7 @@ $(CheckBoxes).click(function () {
     Update();
 });
 
-var ComboBoxes = '#cboAutoConnect, #cboBareLFtoCRLF, #cboBitsPerSecond, #cboConnectionType, #cboEmulation, #cboEnter, #cboFileTransfer, #cboFont, #cboForceWss, #cboLocalEcho, #cboProxyServer, #cboSendLocation, #cboVirtualKeyboardVisible';
+var ComboBoxes = '#cboAutoConnect, #cboBareLFtoCRLF, #cboBitsPerSecond, #cboConnectionType, #cboEmulation, #cboEnter, #cboFileTransfer, #cboFont, #cboForceWss, #cboFullScreenOnConnect, #cboLocalEcho, #cboProxyServer, #cboSendLocation, #cboVirtualKeyboardVisible';
 $(ComboBoxes).change(function () {
     Update();
 });
@@ -63,11 +63,13 @@ function LoadProxies() {
 }
 
 function Update() {
-    // Update visibility of RLogin settings
+    // Update visibility of AutoConnect settings
     if ($('#cboAutoConnect').val() === 'true') {
         $('#pnlSplashScreen').addClass('hidden');
+        $('#pnlFullScreenOnConnect').addClass('hidden');
     } else {
         $('#pnlSplashScreen').removeClass('hidden');
+        $('#pnlFullScreenOnConnect').removeClass('hidden');
     }
 
     // Update visibility of RLogin settings
@@ -133,6 +135,8 @@ function Update() {
     DirectConnectUrl += '&Font=' + $('#cboFont').val();
     SnippetScriptOptions += '    Options' + ClientId + '.ForceWss = ' + $('#cboForceWss').val() + ';\r\n';
     DirectConnectUrl += '&ForceWss=' + $('#cboForceWss').val();
+    SnippetScriptOptions += '    Options' + ClientId + '.FullScreenOnConnect = ' + $('#cboFullScreenOnConnect').val() + ';\r\n';
+    DirectConnectUrl += '&FullScreenOnConnect=' + $('#cboFullScreenOnConnect').val();
     SnippetScriptOptions += '    Options' + ClientId + '.Hostname = \'' + $('#txtHostname').val() + '\';\r\n';
     DirectConnectUrl += '&Hostname=' + $('#txtHostname').val();
     SnippetScriptOptions += '    Options' + ClientId + '.LocalEcho = ' + $('#cboLocalEcho').val() + ';\r\n';

@@ -9,8 +9,8 @@
 
     <title>fTelnet Embed Wizard</title>
 
-    <link href="css/bootstrap.min.css?v=2025-05-05" rel="stylesheet" />
-    <link href="css/site.css?v=2025-05-05" rel="stylesheet" />
+    <link href="css/bootstrap.min.css?v=2026-01-16" rel="stylesheet" />
+    <link href="css/site.css?v=2026-01-16" rel="stylesheet" />
 </head>
 <body>
     <!-- Fixed navbar -->
@@ -58,8 +58,6 @@
                     <input type="text" class="form-control" id="txtPort" value="23">
                 </div>
 
-                <div class="clearfix"></div>
-
                 <div class="col-xs-6">
                     <label class="control-label" for="cboProxyServer">What proxy is closest to you?</label>
                     &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="right" title="What proxy is closest to you?" data-content="If you run fTelnetProxy, websockify, or Synchronet's websocketservice.js, then select the 'I run my own proxy server' option, otherwise pick the public proxy closest to your server."><span class="glyphicon glyphicon-info-sign"></span></a>
@@ -81,8 +79,6 @@
                     </select>
                 </div>
 
-                <div class="clearfix"></div>
-
                 <div class="col-xs-6">
                     <label class="control-label" for="cboFileTransfer">Allow YMODEM-g File Transfers?</label>
                     &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="right" title="Allow YMODEM-g File Transfers?" data-content="Does your server support YMODEM-g file transfers?  If not you can disable file transfer support (hides menu items, uses a slightly smaller fTelnet.js file)"><span class="glyphicon glyphicon-info-sign"></span></a>
@@ -100,8 +96,6 @@
                         <option value="false">No, my BBS does not use SendLocation so ignore requests</option>
                     </select>
                 </div>
-
-                <div class="clearfix"></div>
 			</div>
                
             <h2>Connection Settings</h2>
@@ -134,8 +128,6 @@
                         <option value="115200">115,200 bits per second</option>
                     </select>
                 </div>
-                
-                <div class="clearfix"></div>
                 
                 <div class="col-xs-6">
                     <label class="control-label" for="cboBareLFtoCRLF">Convert 'bare' LF to CR+LF?</label>
@@ -172,8 +164,6 @@
                         <input type="text" class="form-control" id="txtRLoginServerUsername">
                     </div>
 
-                    <div class="clearfix"></div>
-                    
                     <div class="col-xs-6">
                         <label class="control-label" for="txtRLoginTerminalType">Terminal Type</label>
                         &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="right" title="Connection Type" data-content="The string to send in the Terminal Type spot in the RLogin handshake"><span class="glyphicon glyphicon-info-sign"></span></a>
@@ -204,8 +194,6 @@
                     </div>
                 </div>
                     
-                <div class="clearfix"></div>
-
                 <div id="pnlAnsiBBS">
                     <div class="col-xs-6">
                         <label class="control-label" for="txtScreenColumns">How many columns wide should the client be?</label>
@@ -219,8 +207,6 @@
                         <input type="text" class="form-control" id="txtScreenRows" value="25">
                     </div>
 
-                    <div class="clearfix"></div>
-                    
                     <div class="col-xs-6">
                         <label class="control-label" for="cboFont">What codepage should fTelnet use?</label>
                         &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="right" title="What codepage should fTelnet use?" data-content="The Font Codepage to use for displaying high ASCII characters"><span class="glyphicon glyphicon-info-sign"></span></a>
@@ -238,6 +224,17 @@
                             <option value="CP865">Codepage 865</option>
                             <option value="CP866">Codepage 866</option>
                             <option value="CP869">Codepage 869</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="pnlFullScreenOnConnect">
+                    <div class="col-xs-6">
+                        <label class="control-label" for="cboFullScreenOnConnect">Enter full screen on connect?</label>
+                        &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="left" title="Enter full screen on connect?" data-content="Set to Yes if you want the fTelnet client to enter full screen mode when connecting"><span class="glyphicon glyphicon-info-sign"></span></a>
+                        <select class="form-control" id="cboFullScreenOnConnect">
+                            <option value="true">Yes, enter full screen mode when connecting</option>
+                            <option value="false" selected="selected">No, stay in non-full screen mode when connecting</option>
                         </select>
                     </div>
                 </div>
@@ -266,8 +263,6 @@
 					<input type="checkbox" id="chkNegotiateLocalEcho" checked="checked"> <label for="chkNegotiateLocalEcho">Allow telnet negotiation to override this setting?</label>
                     &nbsp; <a href="javascript:void(0);" class="text-primary" data-container="body" data-toggle="popover" data-placement="left" title="Allow telnet negotiation to override this setting?" data-content="If you want to allow your telnet server to override 'Echo keypresses locally?' via telnet negotiation sequences, check this box.  If you want to enforce your 'Echo keypresses locally?' setting and disregard whatever the telnet server asks for, uncheck this box."><span class="glyphicon glyphicon-info-sign"></span></a>
                 </div>
-
-                <div class="clearfix"></div>
 
                 <div class="col-xs-6">
                     <label class="control-label" for="cboVirtualKeyboardVisible">Show the Virtual Keyboard by default?</label>
@@ -329,8 +324,8 @@
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
     <script>$.fn.modal || document.write('<script src="js/bootstrap.min.js"><\/script>')</script>
 
-    <script src="js/wizard.js?v=2025-05-05"></script>
-    <script src="ftelnet/ftelnet.rip.xfer.min.js?v=2025-05-05" id="fTelnetScript"></script>
+    <script src="js/wizard.js?v=2026-01-16"></script>
+    <script src="ftelnet/ftelnet.rip.xfer.min.js?v=2026-01-16" id="fTelnetScript"></script>
 
     <script>
       $(function () {
